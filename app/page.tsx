@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE!;
-
+///komentarz
 const FONTS = [
   "Arial",
   "Verdana",
