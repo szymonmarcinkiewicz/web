@@ -16,6 +16,8 @@ const FONTS = [
   "Courier New",
 ] as const;
 
+///komentarz
+
 const PLAYRES_W = 1920;
 const PLAYRES_H = 1080;
 
