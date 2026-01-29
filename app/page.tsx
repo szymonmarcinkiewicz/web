@@ -1,5 +1,7 @@
-// Header1: app/page.tsx (final - keeps ALL current features + fixes SEO + keeps Preview + adds YouTube-like fullscreen)
-// Description1: This is your current file with minimal-safe edits: (1) SEO H1/title/description + canonical/OG/Twitter via upsert helpers, (2) JSON-LD (SoftwareApplication + FAQPage), (3) SEO landing content + visible FAQ, (4) Preview stays and fullscreen uses Fullscreen API (like YouTube).
+// Header1: app/page.tsx (final - ALL features kept + SEO + Preview + YouTube-like fullscreen + fixed file picker labels)
+// Description1: This version keeps everything from the previous full file and updates ONLY the Dual "Files" inputs so you get:
+// - Button: "Wybierz plik"
+// - Text: either "Nie wybrano pliku" OR the filename (never both concatenated by the browser)
 
 "use client";
 
@@ -24,8 +26,8 @@ const PLAYRES_H = 1080;
 
 type TabKey = "dual" | "translate";
 
-// --- Header2: SEO copy + FAQ + helpers ---
-// --- Description2: Title/description, FAQ, and meta helpers + JSON-LD (SoftwareApplication + FAQPage)
+// Header2: SEO copy + FAQ + helpers
+// Description2: Title/description, FAQ, and meta helpers + JSON-LD (SoftwareApplication + FAQPage)
 const SITE_NAME = "DualSubs";
 const SEO_TITLE = "Dual subtitles (SRT to ASS) - Merge and Translate Subtitles Online";
 const SEO_DESCRIPTION =
@@ -241,8 +243,8 @@ function PreviewCanvas(props: {
 export default function Home() {
   const [tab, setTab] = useState<TabKey>("translate");
 
-  // --- Header3: SEO meta + canonical + social tags (client fallback) ---
-  // --- Description3: This helps now; best practice later is Next.js metadata in layout.tsx.
+  // Header3: SEO meta + canonical + social tags (client fallback)
+  // Description3: Helps now; best practice later is Next.js metadata in layout.tsx.
   useEffect(() => {
     document.title = SEO_TITLE;
 
@@ -266,11 +268,14 @@ export default function Home() {
     }
   }, []);
 
-  // -----------------------------
   // Dual ASS Generator state
-  // -----------------------------
   const [topFile, setTopFile] = useState<File | null>(null);
   const [bottomFile, setBottomFile] = useState<File | null>(null);
+
+  // Header4: File input refs (so clearing also resets the hidden input value)
+  // Description4: Without this, selecting the same file again might not trigger onChange.
+  const topInputRef = useRef<HTMLInputElement | null>(null);
+  const bottomInputRef = useRef<HTMLInputElement | null>(null);
 
   const [fontName, setFontName] = useState<(typeof FONTS)[number]>("Arial");
   const [fontSize, setFontSize] = useState<number>(48);
@@ -282,13 +287,13 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // --- Header4: Fullscreen (YouTube-like) ---
-  // --- Description4: Uses the Fullscreen API. ESC exits naturally (like YouTube).
+  // Header5: Fullscreen (YouTube-like)
+  // Description5: Uses the Fullscreen API. ESC exits naturally (like YouTube).
   const [isTrueFullscreen, setIsTrueFullscreen] = useState(false);
   const fullscreenTargetRef = useRef<HTMLDivElement | null>(null);
 
-  // --- Header5: Preview scaling ---
-  // --- Description5: Preview is fixed 1920x1080 but scaled by current element height.
+  // Header6: Preview scaling
+  // Description6: Preview is fixed 1920x1080 but scaled by current element height.
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const [previewHeight, setPreviewHeight] = useState<number>(0);
 
@@ -411,9 +416,7 @@ export default function Home() {
     if (linkMargins) setMarginVTop(v);
   }
 
-  // -----------------------------
   // AI Translate (with progress)
-  // -----------------------------
   const [translateFile, setTranslateFile] = useState<File | null>(null);
   const [sourceLang, setSourceLang] = useState<string>("auto");
   const [targetLang, setTargetLang] = useState<string>("pl");
@@ -526,7 +529,7 @@ export default function Home() {
             setTranslateInfo("Done. Download started.");
           }
         } catch {
-          // ignore polling errors (dev)
+          // ignore polling errors
         }
       }, 500);
     } catch (err: any) {
@@ -534,6 +537,18 @@ export default function Home() {
       setIsTranslating(false);
       setTranslateError(err?.message ?? "Unknown error");
     }
+  }
+
+  // Header7: Helpers for clearing file pickers (resets hidden input value too)
+  // Description7: Avoids "same file reselect does nothing" issue.
+  function clearTopFile() {
+    setTopFile(null);
+    if (topInputRef.current) topInputRef.current.value = "";
+  }
+
+  function clearBottomFile() {
+    setBottomFile(null);
+    if (bottomInputRef.current) bottomInputRef.current.value = "";
   }
 
   return (
@@ -576,8 +591,8 @@ export default function Home() {
 
       <div className="mx-auto max-w-6xl px-6 py-10">
         <header className="mb-6 text-center">
-          {/* Header6: SEO H1 */}
-          {/* Description6: Replace brand-only H1 with SEO-targeted H1 */}
+          {/* Header8: SEO H1 */}
+          {/* Description8: Replace brand-only H1 with SEO-targeted H1 */}
           <h1 className="text-2xl font-semibold">{SEO_TITLE}</h1>
           <p className="mt-2 text-zinc-300">{SEO_DESCRIPTION}</p>
 
@@ -743,8 +758,8 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Header7: Fullscreen target (YouTube-like) */}
-              {/* Description7: Fullscreen API on the preview stage, ESC exits */}
+              {/* Header9: Fullscreen target (YouTube-like) */}
+              {/* Description9: Fullscreen API on the preview stage, ESC exits */}
               <div className="mt-5 relative" ref={fullscreenTargetRef}>
                 <div ref={previewWrapRef}>
                   <PreviewCanvas
@@ -799,24 +814,82 @@ export default function Home() {
                 <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
                   <div className="text-sm font-medium text-zinc-200">Files</div>
 
+                  {/* Header10: Custom file picker (Top) */}
+                  {/* Description10: Fixes "Wybierz plik Nie wybrano pliku" -> button + separate filename/empty label */}
                   <div className="mt-3">
                     <label className="text-xs text-zinc-400">SRT (Top)</label>
-                    <input
-                      type="file"
-                      accept=".srt"
-                      className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                      onChange={(e) => setTopFile(e.target.files?.[0] ?? null)}
-                    />
+
+                    <div className="mt-2 flex items-center gap-3">
+                      <input
+                        ref={topInputRef}
+                        id="srtTopInput"
+                        type="file"
+                        accept=".srt"
+                        className="hidden"
+                        onChange={(e) => setTopFile(e.target.files?.[0] ?? null)}
+                      />
+
+                      <label
+                        htmlFor="srtTopInput"
+                        className="cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                      >
+                        Wybierz plik
+                      </label>
+
+                      <span className="min-w-0 truncate text-sm text-zinc-400">
+                        {topFile ? topFile.name : "Nie wybrano pliku"}
+                      </span>
+
+                      {topFile && (
+                        <button
+                          type="button"
+                          onClick={clearTopFile}
+                          className="shrink-0 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-900"
+                          title="Wyczyść"
+                        >
+                          Usuń
+                        </button>
+                      )}
+                    </div>
                   </div>
 
+                  {/* Header11: Custom file picker (Bottom) */}
+                  {/* Description11: Same UX as Top picker */}
                   <div className="mt-4">
                     <label className="text-xs text-zinc-400">SRT (Bottom)</label>
-                    <input
-                      type="file"
-                      accept=".srt"
-                      className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                      onChange={(e) => setBottomFile(e.target.files?.[0] ?? null)}
-                    />
+
+                    <div className="mt-2 flex items-center gap-3">
+                      <input
+                        ref={bottomInputRef}
+                        id="srtBottomInput"
+                        type="file"
+                        accept=".srt"
+                        className="hidden"
+                        onChange={(e) => setBottomFile(e.target.files?.[0] ?? null)}
+                      />
+
+                      <label
+                        htmlFor="srtBottomInput"
+                        className="cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                      >
+                        Wybierz plik
+                      </label>
+
+                      <span className="min-w-0 truncate text-sm text-zinc-400">
+                        {bottomFile ? bottomFile.name : "Nie wybrano pliku"}
+                      </span>
+
+                      {bottomFile && (
+                        <button
+                          type="button"
+                          onClick={clearBottomFile}
+                          className="shrink-0 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-900"
+                          title="Wyczyść"
+                        >
+                          Usuń
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -887,8 +960,8 @@ export default function Home() {
           </>
         )}
 
-        {/* Header8: JSON-LD structured data */}
-        {/* Description8: SoftwareApplication + FAQPage for rich results */}
+        {/* Header12: JSON-LD structured data */}
+        {/* Description12: SoftwareApplication + FAQPage for rich results */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -924,8 +997,8 @@ export default function Home() {
           }}
         />
 
-        {/* Header9: SEO landing content */}
-        {/* Description9: Adds readable content for Google without breaking UX */}
+        {/* Header13: SEO landing content */}
+        {/* Description13: Adds readable content for Google without breaking UX */}
         <section className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 text-left">
           <h2 className="text-xl font-semibold text-zinc-100">What this tool does</h2>
           <p className="mt-3 text-zinc-300">
@@ -972,8 +1045,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Header10: Visible FAQ (matches FAQPage JSON-LD) */}
-        {/* Description10: On-page FAQ content for users and SEO */}
+        {/* Header14: Visible FAQ (matches FAQPage JSON-LD) */}
+        {/* Description14: On-page FAQ content for users and SEO */}
         <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 text-left">
           <h2 className="text-xl font-semibold text-zinc-100">FAQ</h2>
           <div className="mt-4 space-y-3">
