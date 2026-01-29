@@ -1,11 +1,12 @@
-// Header1: page.tsx (full file with SEO improvements)
-// Description1: Adds SEO H1 + on-page content, meta tags (client fallback), canonical, JSON-LD (SoftwareApplication + FAQPage), and visible FAQ + trust signals.
+// Header1: app/page.tsx (final - keeps ALL current features + fixes SEO + keeps Preview + adds YouTube-like fullscreen)
+// Description1: This is your current file with minimal-safe edits: (1) SEO H1/title/description + canonical/OG/Twitter via upsert helpers, (2) JSON-LD (SoftwareApplication + FAQPage), (3) SEO landing content + visible FAQ, (4) Preview stays and fullscreen uses Fullscreen API (like YouTube).
 
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE!;
+
 const FONTS = [
   "Arial",
   "Verdana",
@@ -23,8 +24,8 @@ const PLAYRES_H = 1080;
 
 type TabKey = "dual" | "translate";
 
-// --- Header2: SEO constants (landing) ---
-// --- Description2: Title, description, and FAQ data used for on-page SEO + JSON-LD
+// --- Header2: SEO copy + FAQ + helpers ---
+// --- Description2: Title/description, FAQ, and meta helpers + JSON-LD (SoftwareApplication + FAQPage)
 const SITE_NAME = "DualSubs";
 const SEO_TITLE = "Dual subtitles (SRT to ASS) - Merge and Translate Subtitles Online";
 const SEO_DESCRIPTION =
@@ -49,12 +50,10 @@ const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   },
   {
     q: "Do you store my subtitle files?",
-    a: "Files are processed to generate your output and are not intended to be stored long-term. If you need strict privacy guarantees, consider self-hosting.",
+    a: "Files are processed to generate your output and are not intended to be stored long-term. If you need strict privacy guarantees, host your own instance or ask for a self-hosted setup.",
   },
 ];
 
-// --- Header3: Meta helpers ---
-// --- Description3: Utility functions to set meta tags client-side (fallback for a client page)
 function upsertMeta(name: string, content: string) {
   if (typeof document === "undefined") return;
   const head = document.head;
@@ -95,117 +94,84 @@ const LANGS = [
   { code: "auto", label: "Auto-detect" },
   { code: "en", label: "English" },
   { code: "pl", label: "Polish" },
-  { code: "es", label: "Spanish" },
-  { code: "fr", label: "French" },
-  { code: "de", label: "German" },
-  { code: "it", label: "Italian" },
-  { code: "pt", label: "Portuguese" },
   { code: "ru", label: "Russian" },
+  { code: "es", label: "Spanish" },
   { code: "uk", label: "Ukrainian" },
-  { code: "ja", label: "Japanese" },
-  { code: "ko", label: "Korean" },
-  { code: "zh", label: "Chinese" },
-] as const;
-
-type LangCode = (typeof LANGS)[number]["code"];
-
-type JobStatus = "queued" | "running" | "done" | "error";
-
-type TranslateStartResponse = {
-  job_id: string;
-};
-
-type TranslateStatusResponse = {
-  status: JobStatus;
-  progress?: number;
-  message?: string;
-  download_url?: string;
-};
-
-type DualStartResponse = {
-  job_id: string;
-};
-
-type DualStatusResponse = {
-  status: JobStatus;
-  progress?: number;
-  message?: string;
-  download_url?: string;
-};
+  { code: "de", label: "German" },
+  { code: "fr", label: "French" },
+  { code: "it", label: "Italian" },
+];
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function formatPercent(v: number | undefined) {
-  if (typeof v !== "number" || Number.isNaN(v)) return "0%";
-  return `${clamp(Math.round(v), 0, 100)}%`;
-}
-
-function ChainIcon({ linked }: { linked: boolean }) {
+function ChainIcon(props: { linked: boolean }) {
+  const { linked } = props;
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      className="inline-block"
-      aria-hidden="true"
-    >
-      {linked ? (
-        <path
-          d="M10.59 13.41a1.996 1.996 0 0 0 2.82 0l2.83-2.83a2 2 0 0 0-2.83-2.83l-1.41 1.41"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ) : (
-        <path
-          d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity={linked ? 0.35 : 1}
+      />
       <path
         d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity={linked ? 0.4 : 1}
+        opacity={linked ? 1 : 0.6}
       />
     </svg>
+  );
+}
+
+function ProgressBar(props: { pct: number; label: string }) {
+  const { pct, label } = props;
+  const clamped = clamp(Number.isFinite(pct) ? pct : 0, 0, 100);
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-sm font-medium text-zinc-200">{label}</div>
+        <div className="text-sm tabular-nums text-zinc-200">{Math.round(clamped)}%</div>
+      </div>
+
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+        <div className="h-2 rounded-full bg-white" style={{ width: `${clamped}%` }} />
+      </div>
+    </div>
   );
 }
 
 function SliderRow(props: {
   label: string;
   value: number;
+  unit?: string;
   min: number;
   max: number;
+  step?: number;
   onChange: (v: number) => void;
 }) {
-  const { label, value, min, max, onChange } = props;
+  const { label, value, unit = "px", min, max, step = 1, onChange } = props;
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-sm text-zinc-200">{label}</div>
-        <div className="min-w-[44px] text-right text-sm tabular-nums text-zinc-300">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-medium text-zinc-200">{label}</div>
+          <div className="mt-0.5 text-xs text-zinc-400">
+            {min}
+            {unit} to {max}
+            {unit}
+          </div>
+        </div>
+
+        <div className="shrink-0 rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100">
           {value}
+          {unit}
         </div>
       </div>
 
@@ -213,10 +179,61 @@ function SliderRow(props: {
         type="range"
         min={min}
         max={max}
+        step={step}
         value={value}
-        onChange={(e) => onChange(parseInt(e.target.value, 10))}
-        className="w-full"
+        onChange={(e) => onChange(clamp(Number(e.target.value), min, max))}
+        className="ds-range mt-4 w-full"
       />
+    </div>
+  );
+}
+
+function PreviewCanvas(props: {
+  fontName: string;
+  fontSize: number;
+  marginVTop: number;
+  marginVBottom: number;
+  previewTop: string;
+  previewBottom: string;
+  scale: number;
+}) {
+  const { fontName, fontSize, marginVTop, marginVBottom, previewTop, previewBottom, scale } = props;
+
+  const scaledFont = Math.max(10, Math.round(fontSize * scale));
+  const scaledTop = Math.round(marginVTop * scale);
+  const scaledBottom = Math.round(marginVBottom * scale);
+
+  return (
+    <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
+      <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 to-zinc-950" />
+
+      <div
+        className="absolute left-0 right-0 px-10 text-center text-zinc-100"
+        style={{
+          top: `${scaledTop}px`,
+          fontFamily: fontName,
+          fontSize: `${scaledFont}px`,
+          lineHeight: 1.15,
+          textShadow:
+            "0 2px 10px rgba(0,0,0,0.95), 2px 0 0 rgba(0,0,0,0.95), -2px 0 0 rgba(0,0,0,0.95), 0 -2px 0 rgba(0,0,0,0.95)",
+        }}
+      >
+        {previewTop}
+      </div>
+
+      <div
+        className="absolute left-0 right-0 px-10 text-center text-zinc-100"
+        style={{
+          bottom: `${scaledBottom}px`,
+          fontFamily: fontName,
+          fontSize: `${scaledFont}px`,
+          lineHeight: 1.15,
+          textShadow:
+            "0 2px 10px rgba(0,0,0,0.95), 2px 0 0 rgba(0,0,0,0.95), -2px 0 0 rgba(0,0,0,0.95), 0 -2px 0 rgba(0,0,0,0.95)",
+        }}
+      >
+        {previewBottom}
+      </div>
     </div>
   );
 }
@@ -224,279 +241,343 @@ function SliderRow(props: {
 export default function Home() {
   const [tab, setTab] = useState<TabKey>("translate");
 
-  // --- Header4: SEO meta + canonical (client fallback) ---
-  // --- Description4: Sets title/description/canonical + OpenGraph/Twitter tags. Best SEO is server metadata, but this helps now.
+  // --- Header3: SEO meta + canonical + social tags (client fallback) ---
+  // --- Description3: This helps now; best practice later is Next.js metadata in layout.tsx.
   useEffect(() => {
     document.title = SEO_TITLE;
 
     upsertMeta("description", SEO_DESCRIPTION);
 
-    // Basic social previews (safe defaults)
     upsertProperty("og:title", SEO_TITLE);
     upsertProperty("og:description", SEO_DESCRIPTION);
     upsertProperty("og:type", "website");
+
     upsertProperty("twitter:card", "summary");
     upsertProperty("twitter:title", SEO_TITLE);
     upsertProperty("twitter:description", SEO_DESCRIPTION);
 
-    // Canonical URL (current page)
     try {
       const url = new URL(window.location.href);
-      upsertLink("canonical", `${url.origin}${url.pathname}`);
-      upsertProperty("og:url", `${url.origin}${url.pathname}`);
+      const canonical = `${url.origin}${url.pathname}`;
+      upsertLink("canonical", canonical);
+      upsertProperty("og:url", canonical);
     } catch {
       // ignore
     }
   }, []);
 
-  // Translate tab state
-  const [inputFile, setInputFile] = useState<File | null>(null);
-  const [fromLang, setFromLang] = useState<LangCode>("auto");
-  const [toLang, setToLang] = useState<LangCode>("pl");
-  const [tStatus, setTStatus] = useState<JobStatus | null>(null);
-  const [tProgress, setTProgress] = useState<number>(0);
-  const [tMessage, setTMessage] = useState<string>("");
-  const [tError, setTError] = useState<string>("");
-  const tPollRef = useRef<number | null>(null);
-
-  // Dual tab state
+  // -----------------------------
+  // Dual ASS Generator state
+  // -----------------------------
   const [topFile, setTopFile] = useState<File | null>(null);
   const [bottomFile, setBottomFile] = useState<File | null>(null);
 
   const [fontName, setFontName] = useState<(typeof FONTS)[number]>("Arial");
-  const [fontSize, setFontSize] = useState<number>(54);
-  const [outline, setOutline] = useState<number>(2);
-  const [shadow, setShadow] = useState<number>(0);
-  const [marginL, setMarginL] = useState<number>(20);
-  const [marginR, setMarginR] = useState<number>(20);
-  const [marginVTop, setMarginVTop] = useState<number>(36);
-  const [marginVBottom, setMarginVBottom] = useState<number>(36);
-  const [linkMargins, setLinkMargins] = useState<boolean>(true);
+  const [fontSize, setFontSize] = useState<number>(48);
 
-  const [dStatus, setDStatus] = useState<JobStatus | null>(null);
-  const [dProgress, setDProgress] = useState<number>(0);
-  const [dMessage, setDMessage] = useState<string>("");
-  const [dError, setDError] = useState<string>("");
-  const dPollRef = useRef<number | null>(null);
+  const [marginVTop, setMarginVTop] = useState<number>(60);
+  const [marginVBottom, setMarginVBottom] = useState<number>(60);
+  const [linkMargins, setLinkMargins] = useState<boolean>(false);
 
-  const canTranslate = useMemo(() => !!inputFile && !!API_BASE, [inputFile]);
-  const canDual = useMemo(() => !!topFile && !!bottomFile && !!API_BASE, [topFile, bottomFile]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // --- Header4: Fullscreen (YouTube-like) ---
+  // --- Description4: Uses the Fullscreen API. ESC exits naturally (like YouTube).
+  const [isTrueFullscreen, setIsTrueFullscreen] = useState(false);
+  const fullscreenTargetRef = useRef<HTMLDivElement | null>(null);
+
+  // --- Header5: Preview scaling ---
+  // --- Description5: Preview is fixed 1920x1080 but scaled by current element height.
+  const previewWrapRef = useRef<HTMLDivElement | null>(null);
+  const [previewHeight, setPreviewHeight] = useState<number>(0);
 
   useEffect(() => {
-    return () => {
-      if (tPollRef.current) window.clearInterval(tPollRef.current);
-      if (dPollRef.current) window.clearInterval(dPollRef.current);
-    };
+    const el = previewWrapRef.current;
+    if (!el) return;
+
+    const ro = new ResizeObserver(() => {
+      const rect = el.getBoundingClientRect();
+      setPreviewHeight(rect.height);
+    });
+
+    ro.observe(el);
+    setPreviewHeight(el.getBoundingClientRect().height);
+
+    return () => ro.disconnect();
   }, []);
 
-  function resetTranslate() {
-    setInputFile(null);
-    setTStatus(null);
-    setTProgress(0);
-    setTMessage("");
-    setTError("");
-    if (tPollRef.current) window.clearInterval(tPollRef.current);
-    tPollRef.current = null;
-  }
+  const previewScale = useMemo(() => {
+    if (!previewHeight) return 1;
+    return previewHeight / PLAYRES_H;
+  }, [previewHeight]);
 
-  function resetDual() {
-    setTopFile(null);
-    setBottomFile(null);
-    setDStatus(null);
-    setDProgress(0);
-    setDMessage("");
-    setDError("");
-    if (dPollRef.current) window.clearInterval(dPollRef.current);
-    dPollRef.current = null;
-  }
+  const canGenerate = !!topFile && !!bottomFile;
 
-  async function startTranslate() {
-    setTError("");
-    setTMessage("");
-    setTStatus("queued");
-    setTProgress(0);
+  const previewTop = useMemo(
+    () =>
+      topFile
+        ? "This is a top subtitle preview. Adjust font, size and margins."
+        : "Top subtitle preview...",
+    [topFile]
+  );
 
-    if (!API_BASE) {
-      setTStatus("error");
-      setTError("Missing NEXT_PUBLIC_API_BASE");
-      return;
-    }
-    if (!inputFile) {
-      setTStatus("error");
-      setTError("Please pick an input SRT file.");
-      return;
-    }
+  const previewBottom = useMemo(
+    () =>
+      bottomFile
+        ? "This is a bottom subtitle preview. Use the sliders to see the effect."
+        : "Bottom subtitle preview...",
+    [bottomFile]
+  );
 
-    const fd = new FormData();
-    fd.append("file", inputFile);
-    fd.append("source_lang", fromLang);
-    fd.append("target_lang", toLang);
+  async function generateAss() {
+    if (!topFile || !bottomFile) return;
+
+    setIsGenerating(true);
+    setErrorMsg(null);
 
     try {
-      const r = await fetch(`${API_BASE}/v1/translate/start`, {
+      const form = new FormData();
+      form.append("srt_top", topFile);
+      form.append("srt_bottom", bottomFile);
+      form.append("font_name", fontName);
+      form.append("font_size", String(fontSize));
+      form.append("margin_v_top", String(marginVTop));
+      form.append("margin_v_bottom", String(marginVBottom));
+
+      const res = await fetch(`${API_BASE}/v1/merge`, {
         method: "POST",
-        body: fd,
+        body: form,
       });
-      if (!r.ok) throw new Error(await r.text());
-      const data = (await r.json()) as TranslateStartResponse;
-      setTStatus("running");
-      pollTranslate(data.job_id);
-    } catch (e: any) {
-      setTStatus("error");
-      setTError(e?.message || "Failed to start translation.");
-    }
-  }
 
-  function pollTranslate(jobId: string) {
-    if (tPollRef.current) window.clearInterval(tPollRef.current);
-
-    tPollRef.current = window.setInterval(async () => {
-      try {
-        const r = await fetch(`${API_BASE}/v1/translate/status/${jobId}`);
-        if (!r.ok) throw new Error(await r.text());
-        const data = (await r.json()) as TranslateStatusResponse;
-
-        setTStatus(data.status);
-        setTProgress(typeof data.progress === "number" ? data.progress : 0);
-        setTMessage(data.message || "");
-
-        if (data.status === "done" && data.download_url) {
-          if (tPollRef.current) window.clearInterval(tPollRef.current);
-          tPollRef.current = null;
-
-          const d = await fetch(data.download_url);
-          if (!d.ok) throw new Error(await d.text());
-          const blob = await d.blob();
-          const outName = inputFile?.name?.replace(/\.srt$/i, "") || "translated";
-          downloadBlob(blob, `${outName}.${toLang}.srt`);
-        }
-
-        if (data.status === "error") {
-          if (tPollRef.current) window.clearInterval(tPollRef.current);
-          tPollRef.current = null;
-        }
-      } catch (e: any) {
-        setTStatus("error");
-        setTError(e?.message || "Failed to fetch status.");
-        if (tPollRef.current) window.clearInterval(tPollRef.current);
-        tPollRef.current = null;
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Backend error (${res.status}): ${text || "Unknown error"}`);
       }
-    }, 1500);
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "dual-subtitles.ass";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setErrorMsg(err?.message ?? "Unknown error");
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
-  async function startDual() {
-    setDError("");
-    setDMessage("");
-    setDStatus("queued");
-    setDProgress(0);
-
-    if (!API_BASE) {
-      setDStatus("error");
-      setDError("Missing NEXT_PUBLIC_API_BASE");
-      return;
-    }
-    if (!topFile || !bottomFile) {
-      setDStatus("error");
-      setDError("Please pick both SRT files.");
-      return;
-    }
-
-    const payload = {
-      font_name: fontName,
-      font_size: fontSize,
-      outline: outline,
-      shadow: shadow,
-      margin_l: marginL,
-      margin_r: marginR,
-      margin_v_top: marginVTop,
-      margin_v_bottom: marginVBottom,
-      playres_w: PLAYRES_W,
-      playres_h: PLAYRES_H,
-    };
-
-    const fd = new FormData();
-    fd.append("top_file", topFile);
-    fd.append("bottom_file", bottomFile);
-    fd.append("settings_json", JSON.stringify(payload));
+  async function enterFullscreen() {
+    const el = fullscreenTargetRef.current;
+    if (!el) return;
 
     try {
-      const r = await fetch(`${API_BASE}/v1/dual/start`, {
-        method: "POST",
-        body: fd,
-      });
-      if (!r.ok) throw new Error(await r.text());
-      const data = (await r.json()) as DualStartResponse;
-      setDStatus("running");
-      pollDual(data.job_id);
-    } catch (e: any) {
-      setDStatus("error");
-      setDError(e?.message || "Failed to start merge.");
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else alert("Fullscreen is not supported in this browser.");
+    } catch {
+      alert("Fullscreen request was blocked by the browser.");
     }
   }
 
-  function pollDual(jobId: string) {
-    if (dPollRef.current) window.clearInterval(dPollRef.current);
-
-    dPollRef.current = window.setInterval(async () => {
-      try {
-        const r = await fetch(`${API_BASE}/v1/dual/status/${jobId}`);
-        if (!r.ok) throw new Error(await r.text());
-        const data = (await r.json()) as DualStatusResponse;
-
-        setDStatus(data.status);
-        setDProgress(typeof data.progress === "number" ? data.progress : 0);
-        setDMessage(data.message || "");
-
-        if (data.status === "done" && data.download_url) {
-          if (dPollRef.current) window.clearInterval(dPollRef.current);
-          dPollRef.current = null;
-
-          const d = await fetch(data.download_url);
-          if (!d.ok) throw new Error(await d.text());
-          const blob = await d.blob();
-
-          const topName = topFile?.name?.replace(/\.srt$/i, "") || "top";
-          const bottomName = bottomFile?.name?.replace(/\.srt$/i, "") || "bottom";
-          downloadBlob(blob, `${topName}__${bottomName}.ass`);
-        }
-
-        if (data.status === "error") {
-          if (dPollRef.current) window.clearInterval(dPollRef.current);
-          dPollRef.current = null;
-        }
-      } catch (e: any) {
-        setDStatus("error");
-        setDError(e?.message || "Failed to fetch status.");
-        if (dPollRef.current) window.clearInterval(dPollRef.current);
-        dPollRef.current = null;
-      }
-    }, 1500);
+  async function exitFullscreen() {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch {
+      // ignore
+    }
   }
 
-  const setLeftMargin = (v: number) => {
-    setMarginL(v);
-    if (linkMargins) setMarginR(v);
-  };
+  useEffect(() => {
+    function onFsChange() {
+      setIsTrueFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
-  const setRightMargin = (v: number) => {
-    setMarginR(v);
-    if (linkMargins) setMarginL(v);
-  };
-
-  const setTopMargin = (v: number) => {
+  function setTopMargin(v: number) {
     setMarginVTop(v);
     if (linkMargins) setMarginVBottom(v);
-  };
+  }
 
-  const setBottomMargin = (v: number) => {
+  function setBottomMargin(v: number) {
     setMarginVBottom(v);
     if (linkMargins) setMarginVTop(v);
-  };
+  }
+
+  // -----------------------------
+  // AI Translate (with progress)
+  // -----------------------------
+  const [translateFile, setTranslateFile] = useState<File | null>(null);
+  const [sourceLang, setSourceLang] = useState<string>("auto");
+  const [targetLang, setTargetLang] = useState<string>("pl");
+
+  const [translateError, setTranslateError] = useState<string | null>(null);
+  const [translateInfo, setTranslateInfo] = useState<string | null>(null);
+
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
+
+  const [progressPct, setProgressPct] = useState<number>(0);
+  const [progressStage, setProgressStage] = useState<string>("Idle");
+
+  const pollRef = useRef<number | null>(null);
+
+  function stopPolling() {
+    if (pollRef.current) {
+      window.clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    return () => stopPolling();
+  }, []);
+
+  const canTranslate = !!translateFile && !!targetLang && !isTranslating;
+
+  async function downloadResult(finalJobId: string) {
+    const res = await fetch(`${API_BASE}/v1/translate/result/${finalJobId}`);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Result error (${res.status}): ${text || "Unknown error"}`);
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+
+    const base = (translateFile?.name || "translated").replace(/\.[^/.]+$/, "");
+    a.download = `${base}.${targetLang}.srt`;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
+  async function translateStart() {
+    if (!translateFile) return;
+
+    setTranslateError(null);
+    setTranslateInfo(null);
+    setIsTranslating(true);
+    setProgressPct(0);
+    setProgressStage("Queued");
+    setJobId(null);
+
+    try {
+      const form = new FormData();
+      form.append("srt_file", translateFile);
+      form.append("target_lang", targetLang);
+      form.append("source_lang", sourceLang);
+
+      const res = await fetch(`${API_BASE}/v1/translate/start`, {
+        method: "POST",
+        body: form,
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Backend error (${res.status}): ${text || "Unknown error"}`);
+      }
+
+      const data = await res.json();
+      const id = data?.job_id as string;
+      if (!id) throw new Error("Missing job_id from backend.");
+
+      setJobId(id);
+
+      stopPolling();
+      pollRef.current = window.setInterval(async () => {
+        try {
+          const sres = await fetch(`${API_BASE}/v1/translate/status/${id}`);
+          if (!sres.ok) return;
+
+          const sdata = await sres.json();
+          const status = String(sdata.status || "running");
+          const stage = String(sdata.stage || "Working...");
+          const pct = Number(sdata.progress_pct ?? 0);
+
+          setProgressStage(stage);
+          setProgressPct(pct);
+
+          if (status === "error") {
+            stopPolling();
+            setIsTranslating(false);
+            setTranslateError(String(sdata.error || "Translation failed."));
+          }
+
+          if (status === "done") {
+            stopPolling();
+            setProgressStage("Done");
+            setProgressPct(100);
+            await downloadResult(id);
+            setIsTranslating(false);
+            setTranslateInfo("Done. Download started.");
+          }
+        } catch {
+          // ignore polling errors (dev)
+        }
+      }, 500);
+    } catch (err: any) {
+      stopPolling();
+      setIsTranslating(false);
+      setTranslateError(err?.message ?? "Unknown error");
+    }
+  }
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-4 py-10 text-zinc-100">
+    <main className="min-h-screen bg-zinc-950 text-zinc-100">
+      <style jsx global>{`
+        .ds-range {
+          -webkit-appearance: none;
+          appearance: none;
+          height: 8px;
+          border-radius: 999px;
+          background: rgb(39 39 42);
+          outline: none;
+        }
+        .ds-range::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 999px;
+          background: rgb(244 244 245);
+          border: 2px solid rgb(24 24 27);
+          box-shadow: 0 0 0 2px rgb(63 63 70);
+          cursor: pointer;
+        }
+        .ds-range::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 999px;
+          background: rgb(244 244 245);
+          border: 2px solid rgb(24 24 27);
+          box-shadow: 0 0 0 2px rgb(63 63 70);
+          cursor: pointer;
+        }
+        .ds-range::-moz-range-track {
+          height: 8px;
+          border-radius: 999px;
+          background: rgb(39 39 42);
+        }
+      `}</style>
+
       <div className="mx-auto max-w-6xl px-6 py-10">
         <header className="mb-6 text-center">
+          {/* Header6: SEO H1 */}
+          {/* Description6: Replace brand-only H1 with SEO-targeted H1 */}
           <h1 className="text-2xl font-semibold">{SEO_TITLE}</h1>
           <p className="mt-2 text-zinc-300">{SEO_DESCRIPTION}</p>
 
@@ -529,330 +610,285 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
-          {tab === "translate" && (
-            <>
-              <section className="space-y-6">
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950/30 p-5">
-                  <div className="text-lg font-semibold">AI Translation</div>
-                  <div className="mt-2 text-sm text-zinc-400">
-                    Upload 1 SRT, get translated SRT (timings preserved).
-                  </div>
+        {tab === "translate" && (
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+            <div className="text-center">
+              <h2 className="text-lg font-medium">AI Translation</h2>
+              <p className="mt-1 text-sm text-zinc-300">
+                Upload 1 SRT, get translated SRT (timings preserved).
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-6 lg:grid-cols-3">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                <div className="text-sm font-medium text-zinc-200">Input</div>
+
+                <label className="mt-3 block text-xs text-zinc-400">SRT file</label>
+                <input
+                  type="file"
+                  accept=".srt"
+                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                  onChange={(e) => setTranslateFile(e.target.files?.[0] ?? null)}
+                  disabled={isTranslating}
+                />
+
+                <p className="mt-2 text-xs text-zinc-400">UTF-8 recommended.</p>
+              </div>
+
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                <div className="text-sm font-medium text-zinc-200">Languages</div>
+
+                <label className="mt-3 block text-xs text-zinc-400">From</label>
+                <select
+                  value={sourceLang}
+                  onChange={(e) => setSourceLang(e.target.value)}
+                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                  disabled={isTranslating}
+                >
+                  {LANGS.map((l) => (
+                    <option key={l.code} value={l.code}>
+                      {l.label} ({l.code})
+                    </option>
+                  ))}
+                </select>
+
+                <label className="mt-4 block text-xs text-zinc-400">To</label>
+                <select
+                  value={targetLang}
+                  onChange={(e) => setTargetLang(e.target.value)}
+                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                  disabled={isTranslating}
+                >
+                  {LANGS.filter((x) => x.code !== "auto").map((l) => (
+                    <option key={l.code} value={l.code}>
+                      {l.label} ({l.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                <div className="text-sm font-medium text-zinc-200">Progress</div>
+
+                <div className="mt-3">
+                  <ProgressBar pct={progressPct} label={progressStage} />
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-950/30 p-5">
-                    <div className="mb-2 text-sm font-medium text-zinc-200">
-                      Input
-                    </div>
-                    <div className="space-y-2">
-                      <div className="text-xs text-zinc-400">SRT file</div>
-                      <input
-                        type="file"
-                        accept=".srt"
-                        onChange={(e) =>
-                          setInputFile(e.target.files?.[0] || null)
-                        }
-                        className="w-full text-sm"
-                      />
-                      <div className="text-xs text-zinc-500">
-                        UTF-8 recommended.
-                      </div>
-                    </div>
-                  </div>
+                <div className="mt-3 text-xs text-zinc-400">
+                  {jobId ? `Job: ${jobId}` : "No job yet"}
+                </div>
+              </div>
+            </div>
 
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-950/30 p-5">
-                    <div className="mb-2 text-sm font-medium text-zinc-200">
-                      Languages
-                    </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <button
+                disabled={!canTranslate}
+                className={`rounded-md px-4 py-2 text-sm font-medium ${
+                  !canTranslate
+                    ? "cursor-not-allowed bg-zinc-700 text-zinc-300"
+                    : "bg-white text-black hover:bg-zinc-200"
+                }`}
+                onClick={translateStart}
+              >
+                {isTranslating ? "Translating..." : "Translate and download"}
+              </button>
 
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-xs text-zinc-400">From</div>
-                        <select
-                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100"
-                          value={fromLang}
-                          onChange={(e) => setFromLang(e.target.value as LangCode)}
-                        >
-                          {LANGS.map((l) => (
-                            <option key={l.code} value={l.code}>
-                              {l.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+              <button
+                type="button"
+                className="rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                onClick={() => {
+                  stopPolling();
+                  setIsTranslating(false);
+                  setJobId(null);
+                  setProgressPct(0);
+                  setProgressStage("Idle");
+                  setTranslateError(null);
+                  setTranslateInfo(null);
+                  setTranslateFile(null);
+                  setSourceLang("auto");
+                  setTargetLang("pl");
+                }}
+              >
+                Reset
+              </button>
+            </div>
 
-                      <div>
-                        <div className="text-xs text-zinc-400">To</div>
-                        <select
-                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100"
-                          value={toLang}
-                          onChange={(e) => setToLang(e.target.value as LangCode)}
-                        >
-                          {LANGS.filter((l) => l.code !== "auto").map((l) => (
-                            <option key={l.code} value={l.code}>
-                              {l.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
+            {translateInfo && <p className="mt-3 text-center text-xs text-emerald-300">{translateInfo}</p>}
+            {translateError && <p className="mt-3 text-center text-xs text-red-300">{translateError}</p>}
+          </section>
+        )}
+
+        {tab === "dual" && (
+          <>
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+              <div className="text-center">
+                <h2 className="text-lg font-medium">Preview</h2>
+                <p className="mt-1 text-sm text-zinc-300">
+                  Preview uses a fixed {PLAYRES_W}x{PLAYRES_H} canvas. Exported values are in 1080p pixels (ASS PlayRes).
+                </p>
+                <p className="mt-1 text-xs text-zinc-400">The on-page preview is scaled to match its current size.</p>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  disabled={!canGenerate || isGenerating}
+                  className={`rounded-md px-4 py-2 text-sm font-medium ${
+                    !canGenerate || isGenerating
+                      ? "bg-zinc-700 text-zinc-300 cursor-not-allowed"
+                      : "bg-white text-black hover:bg-zinc-200"
+                  }`}
+                  onClick={generateAss}
+                >
+                  {isGenerating ? "Generating..." : "Generate dual subtitles file"}
+                </button>
+              </div>
+
+              {/* Header7: Fullscreen target (YouTube-like) */}
+              {/* Description7: Fullscreen API on the preview stage, ESC exits */}
+              <div className="mt-5 relative" ref={fullscreenTargetRef}>
+                <div ref={previewWrapRef}>
+                  <PreviewCanvas
+                    fontName={fontName}
+                    fontSize={fontSize}
+                    marginVTop={marginVTop}
+                    marginVBottom={marginVBottom}
+                    previewTop={previewTop}
+                    previewBottom={previewBottom}
+                    scale={previewScale}
+                  />
                 </div>
 
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950/30 p-5">
-                  <div className="mb-2 text-sm font-medium text-zinc-200">
-                    Progress
+                <button
+                  type="button"
+                  onClick={() => (isTrueFullscreen ? exitFullscreen() : enterFullscreen())}
+                  className="absolute bottom-3 right-3 z-20 rounded-md border border-zinc-700 bg-zinc-950/70 px-2.5 py-2 text-zinc-100 backdrop-blur hover:bg-zinc-900/80"
+                  aria-label={isTrueFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                  title={isTrueFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M9 3H5a2 2 0 0 0-2 2v4m8 12H5a2 2 0 0 1-2-2v-4m12-12h4a2 2 0 0 1 2 2v4m-6 12h4a2 2 0 0 0 2-2v-4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+
+                {isTrueFullscreen && (
+                  <div className="pointer-events-none absolute top-3 left-3 z-20 rounded-md border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-xs text-zinc-200 backdrop-blur">
+                    Press Esc to exit fullscreen
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-zinc-400">
-                      <span>{tStatus ? tStatus : "No job yet"}</span>
-                      <span>{formatPercent(tProgress)}</span>
-                    </div>
-
-                    <div className="h-2 w-full rounded-full bg-zinc-800">
-                      <div
-                        className="h-2 rounded-full bg-white"
-                        style={{ width: formatPercent(tProgress) }}
-                        aria-hidden="true"
-                      />
-                    </div>
-
-                    <div className="text-xs text-zinc-400">
-                      {tMessage || "No job yet"}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    className={`rounded-lg px-4 py-2 text-sm font-medium ${
-                      canTranslate
-                        ? "bg-white text-black hover:bg-zinc-200"
-                        : "bg-zinc-800 text-zinc-500"
-                    }`}
-                    onClick={startTranslate}
-                    disabled={!canTranslate || tStatus === "running" || tStatus === "queued"}
-                  >
-                    Translate and download
-                  </button>
-
-                  <button
-                    type="button"
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                    onClick={resetTranslate}
-                  >
-                    Reset
-                  </button>
-                </div>
-
-                {tError && (
-                  <div className="text-sm text-red-400">{tError}</div>
                 )}
-              </section>
-            </>
-          )}
+              </div>
 
-          {tab === "dual" && (
-            <>
-              <section className="space-y-6">
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950/30 p-5">
-                  <div className="text-lg font-semibold">Dual ASS Generator</div>
-                  <div className="mt-2 text-sm text-zinc-400">
-                    Upload 2 SRT files and generate a single ASS with top + bottom styles.
+              <div className="mt-3 flex justify-center text-xs text-zinc-400">
+                {!canGenerate ? "Upload both SRT files to enable generating." : "Ready to generate."}
+              </div>
+
+              {errorMsg && <p className="mt-2 text-center text-xs text-red-300">{errorMsg}</p>}
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+              <h2 className="text-lg font-medium">Settings</h2>
+              <p className="mt-1 text-sm text-zinc-300">
+                Choose font and adjust size/margins. Output keeps original timings from both SRT files.
+              </p>
+
+              <div className="mt-5 grid gap-6 lg:grid-cols-3">
+                <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                  <div className="text-sm font-medium text-zinc-200">Files</div>
+
+                  <div className="mt-3">
+                    <label className="text-xs text-zinc-400">SRT (Top)</label>
+                    <input
+                      type="file"
+                      accept=".srt"
+                      className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                      onChange={(e) => setTopFile(e.target.files?.[0] ?? null)}
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="text-xs text-zinc-400">SRT (Bottom)</label>
+                    <input
+                      type="file"
+                      accept=".srt"
+                      className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+                      onChange={(e) => setBottomFile(e.target.files?.[0] ?? null)}
+                    />
                   </div>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-950/30 p-5">
-                    <div className="mb-2 text-sm font-medium text-zinc-200">
-                      Inputs
-                    </div>
+                <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                  <div className="text-sm font-medium text-zinc-200">Font</div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-xs text-zinc-400">Top SRT</div>
-                        <input
-                          type="file"
-                          accept=".srt"
-                          onChange={(e) =>
-                            setTopFile(e.target.files?.[0] || null)
-                          }
-                          className="mt-1 w-full text-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <div className="text-xs text-zinc-400">Bottom SRT</div>
-                        <input
-                          type="file"
-                          accept=".srt"
-                          onChange={(e) =>
-                            setBottomFile(e.target.files?.[0] || null)
-                          }
-                          className="mt-1 w-full text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-950/30 p-5">
-                    <div className="mb-2 text-sm font-medium text-zinc-200">
-                      Progress
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-zinc-400">
-                        <span>{dStatus ? dStatus : "No job yet"}</span>
-                        <span>{formatPercent(dProgress)}</span>
-                      </div>
-
-                      <div className="h-2 w-full rounded-full bg-zinc-800">
-                        <div
-                          className="h-2 rounded-full bg-white"
-                          style={{ width: formatPercent(dProgress) }}
-                          aria-hidden="true"
-                        />
-                      </div>
-
-                      <div className="text-xs text-zinc-400">
-                        {dMessage || "No job yet"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    className={`rounded-lg px-4 py-2 text-sm font-medium ${
-                      canDual
-                        ? "bg-white text-black hover:bg-zinc-200"
-                        : "bg-zinc-800 text-zinc-500"
-                    }`}
-                    onClick={startDual}
-                    disabled={!canDual || dStatus === "running" || dStatus === "queued"}
+                  <label className="mt-3 block text-xs text-zinc-400">Font family</label>
+                  <select
+                    value={fontName}
+                    onChange={(e) => setFontName(e.target.value as (typeof FONTS)[number])}
+                    className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                   >
-                    Generate and download
-                  </button>
+                    {FONTS.map((f) => (
+                      <option key={f} value={f}>
+                        {f}
+                      </option>
+                    ))}
+                  </select>
 
-                  <button
-                    type="button"
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                    onClick={resetDual}
-                  >
-                    Reset
-                  </button>
-                </div>
+                  <p className="mt-2 text-xs text-zinc-400">
+                    The font must be installed on the device where you play the video.
+                  </p>
 
-                {dError && (
-                  <div className="text-sm text-red-400">{dError}</div>
-                )}
-
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-6">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="text-sm font-semibold text-zinc-200">
-                      Style settings
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-2 text-zinc-200 hover:bg-zinc-900"
-                        onClick={() => setLinkMargins((v) => !v)}
-                        title={linkMargins ? "Margins linked (click to unlink)" : "Margins separate (click to link)"}
-                        aria-pressed={linkMargins}
-                      >
-                        <ChainIcon linked={linkMargins} />
-                      </button>
-
-                      <span className="text-xs text-zinc-400">
-                        {linkMargins ? "Margins are linked" : "Margins are separate"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-xs text-zinc-400">Font</div>
-                        <select
-                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-sm text-zinc-100"
-                          value={fontName}
-                          onChange={(e) => setFontName(e.target.value as (typeof FONTS)[number])}
-                        >
-                          {FONTS.map((f) => (
-                            <option key={f} value={f}>
-                              {f}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <SliderRow
-                        label="Font size"
-                        value={fontSize}
-                        min={24}
-                        max={96}
-                        onChange={setFontSize}
-                      />
-                      <SliderRow
-                        label="Outline"
-                        value={outline}
-                        min={0}
-                        max={10}
-                        onChange={setOutline}
-                      />
-                      <SliderRow
-                        label="Shadow"
-                        value={shadow}
-                        min={0}
-                        max={10}
-                        onChange={setShadow}
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                      <SliderRow
-                        label="Left margin"
-                        value={marginL}
-                        min={0}
-                        max={200}
-                        onChange={setLeftMargin}
-                      />
-                      <SliderRow
-                        label="Right margin"
-                        value={marginR}
-                        min={0}
-                        max={200}
-                        onChange={setRightMargin}
-                      />
-                      <SliderRow
-                        label="Top margin (distance from top)"
-                        value={marginVTop}
-                        min={0}
-                        max={200}
-                        onChange={setTopMargin}
-                      />
-                      <SliderRow
-                        label="Bottom margin (distance from bottom)"
-                        value={marginVBottom}
-                        min={0}
-                        max={200}
-                        onChange={setBottomMargin}
-                      />
-                    </div>
+                  <div className="mt-4">
+                    <SliderRow label="Font size" value={fontSize} min={24} max={90} onChange={setFontSize} />
                   </div>
                 </div>
-              </section>
-            </>
-          )}
-        </div>
 
-        {/* --- Header5: JSON-LD structured data --- */}
-        {/* --- Description5: Helps search engines understand this page as a tool + exposes FAQ rich results. */}
+                <div className="space-y-4">
+                  <SliderRow
+                    label="Top margin (distance from top)"
+                    value={marginVTop}
+                    min={0}
+                    max={200}
+                    onChange={setTopMargin}
+                  />
+
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setLinkMargins((v) => !v)}
+                      className={`rounded-md border px-3 py-2 transition ${
+                        linkMargins
+                          ? "border-white bg-white text-black"
+                          : "border-zinc-700 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
+                      }`}
+                      title={linkMargins ? "Margins linked (click to unlink)" : "Margins separate (click to link)"}
+                      aria-pressed={linkMargins}
+                    >
+                      <ChainIcon linked={linkMargins} />
+                    </button>
+
+                    <span className="text-xs text-zinc-400">
+                      {linkMargins ? "Margins are linked" : "Margins are separate"}
+                    </span>
+                  </div>
+
+                  <SliderRow
+                    label="Bottom margin (distance from bottom)"
+                    value={marginVBottom}
+                    min={0}
+                    max={200}
+                    onChange={setBottomMargin}
+                  />
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* Header8: JSON-LD structured data */}
+        {/* Description8: SoftwareApplication + FAQPage for rich results */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -888,37 +924,41 @@ export default function Home() {
           }}
         />
 
-        {/* --- Header6: SEO landing content (under the tool) --- */}
-        {/* --- Description6: Adds readable content for Google without hurting the UX. */}
+        {/* Header9: SEO landing content */}
+        {/* Description9: Adds readable content for Google without breaking UX */}
         <section className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 text-left">
           <h2 className="text-xl font-semibold text-zinc-100">What this tool does</h2>
           <p className="mt-3 text-zinc-300">
-            DualSubs helps you create dual subtitles (two languages at once) and convert subtitles from SRT to ASS. You can also translate subtitles with AI while keeping the original timings.
+            DualSubs helps you create dual subtitles (two languages at once) and convert subtitles from SRT to ASS.
+            You can also translate subtitles with AI while keeping the original timings.
           </p>
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <div>
               <h3 className="text-base font-semibold text-zinc-100">Who is this for?</h3>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-zinc-300">
-                <li>Anime watchers who want JP/EN (or any pair) on-screen</li>
-                <li>Language learners combining native + target language</li>
+                <li>Anime watchers who want original + translation on-screen</li>
+                <li>Language learners combining native and target language</li>
                 <li>Movie/TV translators who need quick bilingual output</li>
-                <li>VLC / MPV users who want subtitles on top and bottom</li>
+                <li>VLC and MPV users who want subtitles on top and bottom</li>
               </ul>
             </div>
 
             <div>
               <h3 className="text-base font-semibold text-zinc-100">Why ASS instead of SRT?</h3>
               <p className="mt-2 text-zinc-300">
-                SRT is simple and widely supported, but it cannot reliably position two languages at different screen locations. ASS supports styles, margins, and positioning, so you can keep one language at the top and the other at the bottom.
+                SRT is simple and widely supported, but it cannot reliably position two languages at different screen
+                locations. ASS supports styles, margins, and positioning, so you can keep one language at the top and
+                the other at the bottom.
               </p>
             </div>
           </div>
 
           <div className="mt-6">
-            <h3 className="text-base font-semibold text-zinc-100">Popular searches (long-tail)</h3>
+            <h3 className="text-base font-semibold text-zinc-100">Popular searches</h3>
             <p className="mt-2 text-zinc-300">
-              dual subtitles VLC, two languages subtitles VLC, merge SRT files, SRT to ASS dual subtitles, anime dual subtitles, learn language with subtitles
+              dual subtitles VLC, two languages subtitles VLC, merge SRT files, SRT to ASS dual subtitles, anime dual subtitles,
+              learn language with subtitles
             </p>
           </div>
 
@@ -932,16 +972,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- Header7: FAQ (visible content) --- */}
-        {/* --- Description7: On-page FAQ + matches the FAQPage JSON-LD. */}
+        {/* Header10: Visible FAQ (matches FAQPage JSON-LD) */}
+        {/* Description10: On-page FAQ content for users and SEO */}
         <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 text-left">
           <h2 className="text-xl font-semibold text-zinc-100">FAQ</h2>
           <div className="mt-4 space-y-3">
             {FAQ_ITEMS.map((item) => (
-              <details
-                key={item.q}
-                className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4"
-              >
+              <details key={item.q} className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
                 <summary className="cursor-pointer text-zinc-100">{item.q}</summary>
                 <p className="mt-2 text-zinc-300">{item.a}</p>
               </details>
