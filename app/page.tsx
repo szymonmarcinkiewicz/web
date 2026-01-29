@@ -1,8 +1,9 @@
-// Header1: app/page.tsx (final - ALL features kept + SEO + Preview + YouTube-like fullscreen + custom file pickers in BOTH tabs)
-// Description1: This version applies the same "Wybierz plik" + "Nie wybrano pliku"/filename UI to:
-// - Dual ASS Generator: Top/Bottom inputs
-// - AI Translation: single input
-// So you will NEVER see "Wybierz plik Nie wybrano pliku" again.
+// Header1: app/page.tsx (final - hides "Wybierz plik" when file selected; filename becomes the picker trigger)
+// Description1: When a file is selected:
+// - "Wybierz plik" button is hidden
+// - filename becomes clickable to change the file
+// - "Usuń" stays on the right
+// This prevents layout break on long filenames.
 
 "use client";
 
@@ -27,8 +28,6 @@ const PLAYRES_H = 1080;
 
 type TabKey = "dual" | "translate";
 
-// Header2: SEO copy + FAQ + helpers
-// Description2: Title/description, FAQ, and meta helpers + JSON-LD (SoftwareApplication + FAQPage)
 const SITE_NAME = "DualSubs";
 const SEO_TITLE = "Dual subtitles (SRT to ASS) - Merge and Translate Subtitles Online";
 const SEO_DESCRIPTION =
@@ -244,10 +243,8 @@ function PreviewCanvas(props: {
 export default function Home() {
   const [tab, setTab] = useState<TabKey>("translate");
 
-  // Header3: SEO meta + canonical + social tags (client fallback)
   useEffect(() => {
     document.title = SEO_TITLE;
-
     upsertMeta("description", SEO_DESCRIPTION);
 
     upsertProperty("og:title", SEO_TITLE);
@@ -272,7 +269,6 @@ export default function Home() {
   const [topFile, setTopFile] = useState<File | null>(null);
   const [bottomFile, setBottomFile] = useState<File | null>(null);
 
-  // Header4: File input refs (Dual)
   const topInputRef = useRef<HTMLInputElement | null>(null);
   const bottomInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -286,11 +282,11 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Header5: Fullscreen (YouTube-like)
+  // Fullscreen
   const [isTrueFullscreen, setIsTrueFullscreen] = useState(false);
   const fullscreenTargetRef = useRef<HTMLDivElement | null>(null);
 
-  // Header6: Preview scaling
+  // Preview scaling
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const [previewHeight, setPreviewHeight] = useState<number>(0);
 
@@ -413,7 +409,6 @@ export default function Home() {
     if (linkMargins) setMarginVTop(v);
   }
 
-  // Header7: Helpers for clearing file pickers (Dual)
   function clearTopFile() {
     setTopFile(null);
     if (topInputRef.current) topInputRef.current.value = "";
@@ -424,10 +419,8 @@ export default function Home() {
     if (bottomInputRef.current) bottomInputRef.current.value = "";
   }
 
-  // AI Translate (with progress)
+  // AI Translate
   const [translateFile, setTranslateFile] = useState<File | null>(null);
-
-  // Header8: File input ref (Translate)
   const translateInputRef = useRef<HTMLInputElement | null>(null);
 
   const [sourceLang, setSourceLang] = useState<string>("auto");
@@ -551,7 +544,6 @@ export default function Home() {
     }
   }
 
-  // Header9: Helpers for clearing file picker (Translate)
   function clearTranslateFile() {
     setTranslateFile(null);
     if (translateInputRef.current) translateInputRef.current.value = "";
@@ -642,10 +634,10 @@ export default function Home() {
               <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
                 <div className="text-sm font-medium text-zinc-200">Input</div>
 
-                {/* Header10: Custom file picker (Translate) */}
-                {/* Description10: Fixes browser concatenation: "Wybierz plik Nie wybrano pliku" */}
                 <label className="mt-3 block text-xs text-zinc-400">SRT file</label>
 
+                {/* Header2: File row (button hides when file selected) */}
+                {/* Description2: If a file exists -> show clickable filename (to change) and "Usuń". Otherwise show "Wybierz plik". */}
                 <div className="mt-2 flex items-center gap-3">
                   <input
                     ref={translateInputRef}
@@ -657,18 +649,32 @@ export default function Home() {
                     disabled={isTranslating}
                   />
 
-                  <label
-                    htmlFor="translateSrtInput"
-                    className={`cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900 ${
-                      isTranslating ? "pointer-events-none opacity-60" : ""
-                    }`}
-                  >
-                    Wybierz plik
-                  </label>
+                  {!translateFile ? (
+                    <label
+                      htmlFor="translateSrtInput"
+                      className={`cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900 ${
+                        isTranslating ? "pointer-events-none opacity-60" : ""
+                      }`}
+                    >
+                      Wybierz plik
+                    </label>
+                  ) : (
+                    <label
+                      htmlFor="translateSrtInput"
+                      className={`min-w-0 flex-1 cursor-pointer truncate rounded-md border border-zinc-800 bg-zinc-950/30 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/40 ${
+                        isTranslating ? "pointer-events-none opacity-60" : ""
+                      }`}
+                      title="Kliknij, aby zmienić plik"
+                    >
+                      {translateFile.name}
+                    </label>
+                  )}
 
-                  <span className="min-w-0 truncate text-sm text-zinc-400">
-                    {translateFile ? translateFile.name : "Nie wybrano pliku"}
-                  </span>
+                  {!translateFile && (
+                    <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">
+                      Nie wybrano pliku
+                    </span>
+                  )}
 
                   {translateFile && !isTranslating && (
                     <button
@@ -724,9 +730,7 @@ export default function Home() {
                   <ProgressBar pct={progressPct} label={progressStage} />
                 </div>
 
-                <div className="mt-3 text-xs text-zinc-400">
-                  {jobId ? `Job: ${jobId}` : "No job yet"}
-                </div>
+                <div className="mt-3 text-xs text-zinc-400">{jobId ? `Job: ${jobId}` : "No job yet"}</div>
               </div>
             </div>
 
@@ -860,16 +864,28 @@ export default function Home() {
                         onChange={(e) => setTopFile(e.target.files?.[0] ?? null)}
                       />
 
-                      <label
-                        htmlFor="srtTopInput"
-                        className="cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                      >
-                        Wybierz plik
-                      </label>
+                      {!topFile ? (
+                        <label
+                          htmlFor="srtTopInput"
+                          className="cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                        >
+                          Wybierz plik
+                        </label>
+                      ) : (
+                        <label
+                          htmlFor="srtTopInput"
+                          className="min-w-0 flex-1 cursor-pointer truncate rounded-md border border-zinc-800 bg-zinc-950/30 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/40"
+                          title="Kliknij, aby zmienić plik"
+                        >
+                          {topFile.name}
+                        </label>
+                      )}
 
-                      <span className="min-w-0 truncate text-sm text-zinc-400">
-                        {topFile ? topFile.name : "Nie wybrano pliku"}
-                      </span>
+                      {!topFile && (
+                        <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">
+                          Nie wybrano pliku
+                        </span>
+                      )}
 
                       {topFile && (
                         <button
@@ -897,16 +913,28 @@ export default function Home() {
                         onChange={(e) => setBottomFile(e.target.files?.[0] ?? null)}
                       />
 
-                      <label
-                        htmlFor="srtBottomInput"
-                        className="cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                      >
-                        Wybierz plik
-                      </label>
+                      {!bottomFile ? (
+                        <label
+                          htmlFor="srtBottomInput"
+                          className="cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                        >
+                          Wybierz plik
+                        </label>
+                      ) : (
+                        <label
+                          htmlFor="srtBottomInput"
+                          className="min-w-0 flex-1 cursor-pointer truncate rounded-md border border-zinc-800 bg-zinc-950/30 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/40"
+                          title="Kliknij, aby zmienić plik"
+                        >
+                          {bottomFile.name}
+                        </label>
+                      )}
 
-                      <span className="min-w-0 truncate text-sm text-zinc-400">
-                        {bottomFile ? bottomFile.name : "Nie wybrano pliku"}
-                      </span>
+                      {!bottomFile && (
+                        <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">
+                          Nie wybrano pliku
+                        </span>
+                      )}
 
                       {bottomFile && (
                         <button
@@ -1002,11 +1030,7 @@ export default function Home() {
                     applicationCategory: "MultimediaApplication",
                     operatingSystem: "Web",
                     description: SEO_DESCRIPTION,
-                    offers: {
-                      "@type": "Offer",
-                      price: "0",
-                      priceCurrency: "USD",
-                    },
+                    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
                   },
                   {
                     "@type": "FAQPage",
@@ -1027,8 +1051,8 @@ export default function Home() {
         <section className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 text-left">
           <h2 className="text-xl font-semibold text-zinc-100">What this tool does</h2>
           <p className="mt-3 text-zinc-300">
-            DualSubs helps you create dual subtitles (two languages at once) and convert subtitles from SRT to ASS.
-            You can also translate subtitles with AI while keeping the original timings.
+            DualSubs helps you create dual subtitles (two languages at once) and convert subtitles from SRT to ASS. You
+            can also translate subtitles with AI while keeping the original timings.
           </p>
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -1055,8 +1079,8 @@ export default function Home() {
           <div className="mt-6">
             <h3 className="text-base font-semibold text-zinc-100">Popular searches</h3>
             <p className="mt-2 text-zinc-300">
-              dual subtitles VLC, two languages subtitles VLC, merge SRT files, SRT to ASS dual subtitles, anime dual subtitles,
-              learn language with subtitles
+              dual subtitles VLC, two languages subtitles VLC, merge SRT files, SRT to ASS dual subtitles, anime dual
+              subtitles, learn language with subtitles
             </p>
           </div>
 
@@ -1081,6 +1105,9 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        {translateInfo && <p className="mt-3 text-center text-xs text-emerald-300">{translateInfo}</p>}
+        {translateError && <p className="mt-3 text-center text-xs text-red-300">{translateError}</p>}
       </div>
     </main>
   );
