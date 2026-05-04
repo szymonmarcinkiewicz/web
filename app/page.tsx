@@ -1,10 +1,3 @@
-// Header1: app/page.tsx (final - hides "Wybierz plik" when file selected; filename becomes the picker trigger)
-// Description1: When a file is selected:
-// - "Wybierz plik" button is hidden
-// - filename becomes clickable to change the file
-// - "Usuń" stays on the right
-// This prevents layout break on long filenames.
-
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -32,6 +25,22 @@ const SITE_NAME = "DualSubs";
 const SEO_TITLE = "Dual subtitles (SRT to ASS) - Merge and Translate Subtitles Online";
 const SEO_DESCRIPTION =
   "Create dual subtitles easily. Merge two SRT files into one ASS or translate subtitles with AI. Works with VLC and MPV - timings preserved.";
+
+const surfaceClass =
+  "rounded-2xl border border-white/10 bg-zinc-950/70 shadow-[0_24px_80px_rgba(0,0,0,0.42)] backdrop-blur";
+const panelClass = "rounded-xl border border-white/10 bg-white/[0.035] p-4";
+const inputClass =
+  "mt-2 block w-full rounded-lg border border-white/10 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-cyan-300/70 focus:ring-2 focus:ring-cyan-300/15 disabled:opacity-60";
+const secondaryButtonClass =
+  "rounded-lg border border-white/10 bg-white/[0.035] px-4 py-2 text-sm text-zinc-200 transition hover:border-cyan-300/40 hover:bg-cyan-300/10";
+
+function primaryButtonClass(disabled: boolean) {
+  return `rounded-lg px-4 py-2 text-sm font-medium transition ${
+    disabled
+      ? "cursor-not-allowed border border-white/10 bg-zinc-800 text-zinc-500"
+      : "border border-cyan-200/60 bg-cyan-200 text-zinc-950 shadow-[0_0_28px_rgba(103,232,249,0.18)] hover:bg-cyan-100"
+  }`;
+}
 
 const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   {
@@ -108,6 +117,10 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
+function errorMessage(err: unknown, fallback = "Unknown error") {
+  return err instanceof Error ? err.message : fallback;
+}
+
 function ChainIcon(props: { linked: boolean }) {
   const { linked } = props;
   return (
@@ -130,19 +143,97 @@ function ChainIcon(props: { linked: boolean }) {
   );
 }
 
+function FileIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M14 3v5h5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FilePicker(props: {
+  id: string;
+  label: string;
+  file: File | null;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  disabled?: boolean;
+  onChange: (file: File | null) => void;
+  onClear: () => void;
+}) {
+  const { id, label, file, inputRef, disabled = false, onChange, onClear } = props;
+
+  return (
+    <div>
+      <label className="text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">{label}</label>
+      <input
+        ref={inputRef}
+        id={id}
+        type="file"
+        accept=".srt"
+        className="hidden"
+        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+        disabled={disabled}
+      />
+
+      <div className="mt-2 flex items-center gap-2">
+        <label
+          htmlFor={id}
+          className={`group flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl border border-dashed px-3 py-3 transition ${
+            disabled
+              ? "pointer-events-none border-white/10 bg-zinc-900/50 opacity-60"
+              : file
+                ? "border-cyan-300/35 bg-cyan-300/[0.055] hover:border-cyan-200/60"
+                : "border-white/10 bg-zinc-950/60 hover:border-cyan-300/45 hover:bg-cyan-300/[0.04]"
+          }`}
+          title={file ? "Kliknij, aby zmienić plik" : "Wybierz plik"}
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.045] text-cyan-200">
+            <FileIcon />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-medium text-zinc-100">
+              {file ? file.name : "Wybierz plik SRT"}
+            </span>
+            <span className="mt-0.5 block text-xs text-zinc-500">
+              {file ? "Gotowe do przetworzenia" : "UTF-8 recommended"}
+            </span>
+          </span>
+        </label>
+
+        {file && !disabled && (
+          <button type="button" onClick={onClear} className={secondaryButtonClass} title="Wyczyść">
+            Usuń
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProgressBar(props: { pct: number; label: string }) {
   const { pct, label } = props;
   const clamped = clamp(Number.isFinite(pct) ? pct : 0, 0, 100);
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+    <div className="rounded-xl border border-white/10 bg-zinc-950/55 p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-medium text-zinc-200">{label}</div>
-        <div className="text-sm tabular-nums text-zinc-200">{Math.round(clamped)}%</div>
+        <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-xs tabular-nums text-cyan-100">
+          {Math.round(clamped)}%
+        </div>
       </div>
 
-      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
-        <div className="h-2 rounded-full bg-white" style={{ width: `${clamped}%` }} />
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-800/80">
+        <div
+          className="h-2 rounded-full bg-cyan-200 shadow-[0_0_18px_rgba(103,232,249,0.42)]"
+          style={{ width: `${clamped}%` }}
+        />
       </div>
     </div>
   );
@@ -160,7 +251,7 @@ function SliderRow(props: {
   const { label, value, unit = "px", min, max, step = 1, onChange } = props;
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+    <div className={panelClass}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm font-medium text-zinc-200">{label}</div>
@@ -171,7 +262,7 @@ function SliderRow(props: {
           </div>
         </div>
 
-        <div className="shrink-0 rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-zinc-100">
+        <div className="shrink-0 rounded-lg border border-white/10 bg-zinc-950/70 px-2 py-1 text-sm text-zinc-100">
           {value}
           {unit}
         </div>
@@ -206,8 +297,12 @@ function PreviewCanvas(props: {
   const scaledBottom = Math.round(marginVBottom * scale);
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
-      <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 to-zinc-950" />
+    <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-950 shadow-[inset_0_0_80px_rgba(0,0,0,0.65)]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(34,211,238,0.16),transparent_28%),linear-gradient(135deg,#18181b,#09090b_62%,#050505)]" />
+      <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:44px_44px]" />
+      <div className="absolute left-3 top-3 rounded-md border border-white/10 bg-black/35 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-400 backdrop-blur">
+        {PLAYRES_W}x{PLAYRES_H}
+      </div>
 
       <div
         className="absolute left-0 right-0 px-10 text-center text-zinc-100"
@@ -364,8 +459,8 @@ export default function Home() {
       a.remove();
 
       URL.revokeObjectURL(url);
-    } catch (err: any) {
-      setErrorMsg(err?.message ?? "Unknown error");
+    } catch (err: unknown) {
+      setErrorMsg(errorMessage(err));
     } finally {
       setIsGenerating(false);
     }
@@ -537,10 +632,10 @@ export default function Home() {
           // ignore polling errors
         }
       }, 500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       stopPolling();
       setIsTranslating(false);
-      setTranslateError(err?.message ?? "Unknown error");
+      setTranslateError(errorMessage(err));
     }
   }
 
@@ -550,14 +645,14 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100">
+    <main className="relative min-h-screen overflow-hidden bg-[#050607] text-zinc-100">
       <style jsx global>{`
         .ds-range {
           -webkit-appearance: none;
           appearance: none;
           height: 8px;
           border-radius: 999px;
-          background: rgb(39 39 42);
+          background: rgba(39, 39, 42, 0.92);
           outline: none;
         }
         .ds-range::-webkit-slider-thumb {
@@ -566,40 +661,50 @@ export default function Home() {
           width: 18px;
           height: 18px;
           border-radius: 999px;
-          background: rgb(244 244 245);
-          border: 2px solid rgb(24 24 27);
-          box-shadow: 0 0 0 2px rgb(63 63 70);
+          background: rgb(165 243 252);
+          border: 2px solid rgb(8 47 73);
+          box-shadow: 0 0 0 2px rgba(103, 232, 249, 0.32), 0 0 18px rgba(103, 232, 249, 0.24);
           cursor: pointer;
         }
         .ds-range::-moz-range-thumb {
           width: 18px;
           height: 18px;
           border-radius: 999px;
-          background: rgb(244 244 245);
-          border: 2px solid rgb(24 24 27);
-          box-shadow: 0 0 0 2px rgb(63 63 70);
+          background: rgb(165 243 252);
+          border: 2px solid rgb(8 47 73);
+          box-shadow: 0 0 0 2px rgba(103, 232, 249, 0.32), 0 0 18px rgba(103, 232, 249, 0.24);
           cursor: pointer;
         }
         .ds-range::-moz-range-track {
           height: 8px;
           border-radius: 999px;
-          background: rgb(39 39 42);
+          background: rgba(39, 39, 42, 0.92);
         }
       `}</style>
 
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <header className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold">{SEO_TITLE}</h1>
-          <p className="mt-2 text-zinc-300">{SEO_DESCRIPTION}</p>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.15),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(74,222,128,0.08),transparent_28%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:56px_56px]" />
 
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
+      <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
+        <header className="mb-6 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <div className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">{SITE_NAME}</div>
+            <h1 className="mt-3 text-3xl font-semibold tracking-normal text-zinc-50 md:text-4xl">
+              Dual subtitles, without the heavy editor.
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400 md:text-base">
+              Translate SRT files with preserved timings or generate ASS subtitles with top and bottom language tracks.
+            </p>
+          </div>
+
+          <div className="inline-grid w-full grid-cols-2 rounded-xl border border-white/10 bg-black/30 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur md:w-auto">
             <button
               type="button"
               onClick={() => setTab("translate")}
-              className={`rounded-full border px-4 py-2 text-sm transition ${
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                 tab === "translate"
-                  ? "border-white bg-white text-black"
-                  : "border-zinc-700 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
+                  ? "bg-cyan-200 text-zinc-950 shadow-[0_0_22px_rgba(103,232,249,0.18)]"
+                  : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100"
               }`}
               aria-pressed={tab === "translate"}
             >
@@ -609,10 +714,10 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setTab("dual")}
-              className={`rounded-full border px-4 py-2 text-sm transition ${
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                 tab === "dual"
-                  ? "border-white bg-white text-black"
-                  : "border-zinc-700 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
+                  ? "bg-cyan-200 text-zinc-950 shadow-[0_0_22px_rgba(103,232,249,0.18)]"
+                  : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100"
               }`}
               aria-pressed={tab === "dual"}
             >
@@ -622,85 +727,39 @@ export default function Home() {
         </header>
 
         {tab === "translate" && (
-          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-            <div className="text-center">
-              <h2 className="text-lg font-medium">AI Translation</h2>
-              <p className="mt-1 text-sm text-zinc-300">
-                Upload 1 SRT, get translated SRT (timings preserved).
-              </p>
+          <section className={`${surfaceClass} p-5 sm:p-6`}>
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-[0.18em] text-cyan-200/70">AI workflow</div>
+                <h2 className="mt-2 text-xl font-semibold">Translate SRT</h2>
+                <p className="mt-1 text-sm text-zinc-400">Upload one file and get a translated SRT with original timings.</p>
+              </div>
+              <div className="w-fit rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs text-emerald-100">
+                Timings preserved
+              </div>
             </div>
 
             <div className="mt-5 grid gap-6 lg:grid-cols-3">
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+              <div className={panelClass}>
                 <div className="text-sm font-medium text-zinc-200">Input</div>
-
-                <label className="mt-3 block text-xs text-zinc-400">SRT file</label>
-
-                {/* Header2: File row (button hides when file selected) */}
-                {/* Description2: If a file exists -> show clickable filename (to change) and "Usuń". Otherwise show "Wybierz plik". */}
-                <div className="mt-2 flex items-center gap-3">
-                  <input
-                    ref={translateInputRef}
+                <div className="mt-3">
+                  <FilePicker
                     id="translateSrtInput"
-                    type="file"
-                    accept=".srt"
-                    className="hidden"
-                    onChange={(e) => setTranslateFile(e.target.files?.[0] ?? null)}
+                    label="SRT file"
+                    file={translateFile}
+                    inputRef={translateInputRef}
                     disabled={isTranslating}
+                    onChange={setTranslateFile}
+                    onClear={clearTranslateFile}
                   />
-
-                  {!translateFile ? (
-                    <label
-                      htmlFor="translateSrtInput"
-                      className={`cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900 ${
-                        isTranslating ? "pointer-events-none opacity-60" : ""
-                      }`}
-                    >
-                      Wybierz plik
-                    </label>
-                  ) : (
-                    <label
-                      htmlFor="translateSrtInput"
-                      className={`min-w-0 flex-1 cursor-pointer truncate rounded-md border border-zinc-800 bg-zinc-950/30 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/40 ${
-                        isTranslating ? "pointer-events-none opacity-60" : ""
-                      }`}
-                      title="Kliknij, aby zmienić plik"
-                    >
-                      {translateFile.name}
-                    </label>
-                  )}
-
-                  {!translateFile && (
-                    <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">
-                      Nie wybrano pliku
-                    </span>
-                  )}
-
-                  {translateFile && !isTranslating && (
-                    <button
-                      type="button"
-                      onClick={clearTranslateFile}
-                      className="shrink-0 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-900"
-                      title="Wyczyść"
-                    >
-                      Usuń
-                    </button>
-                  )}
                 </div>
-
-                <p className="mt-2 text-xs text-zinc-400">UTF-8 recommended.</p>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+              <div className={panelClass}>
                 <div className="text-sm font-medium text-zinc-200">Languages</div>
 
-                <label className="mt-3 block text-xs text-zinc-400">From</label>
-                <select
-                  value={sourceLang}
-                  onChange={(e) => setSourceLang(e.target.value)}
-                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                  disabled={isTranslating}
-                >
+                <label className="mt-3 block text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">From</label>
+                <select value={sourceLang} onChange={(e) => setSourceLang(e.target.value)} className={inputClass} disabled={isTranslating}>
                   {LANGS.map((l) => (
                     <option key={l.code} value={l.code}>
                       {l.label} ({l.code})
@@ -708,13 +767,8 @@ export default function Home() {
                   ))}
                 </select>
 
-                <label className="mt-4 block text-xs text-zinc-400">To</label>
-                <select
-                  value={targetLang}
-                  onChange={(e) => setTargetLang(e.target.value)}
-                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                  disabled={isTranslating}
-                >
+                <label className="mt-4 block text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">To</label>
+                <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} className={inputClass} disabled={isTranslating}>
                   {LANGS.filter((x) => x.code !== "auto").map((l) => (
                     <option key={l.code} value={l.code}>
                       {l.label} ({l.code})
@@ -723,33 +777,30 @@ export default function Home() {
                 </select>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
-                <div className="text-sm font-medium text-zinc-200">Progress</div>
+              <div className={panelClass}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-medium text-zinc-200">Progress</div>
+                  <div className="rounded-full border border-white/10 bg-white/[0.035] px-2 py-0.5 text-xs text-zinc-400">
+                    {jobId ? "Running" : "Idle"}
+                  </div>
+                </div>
 
                 <div className="mt-3">
                   <ProgressBar pct={progressPct} label={progressStage} />
                 </div>
 
-                <div className="mt-3 text-xs text-zinc-400">{jobId ? `Job: ${jobId}` : "No job yet"}</div>
+                <div className="mt-3 truncate text-xs text-zinc-500">{jobId ? `Job: ${jobId}` : "No job yet"}</div>
               </div>
             </div>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <button
-                disabled={!canTranslate}
-                className={`rounded-md px-4 py-2 text-sm font-medium ${
-                  !canTranslate
-                    ? "cursor-not-allowed bg-zinc-700 text-zinc-300"
-                    : "bg-white text-black hover:bg-zinc-200"
-                }`}
-                onClick={translateStart}
-              >
+              <button disabled={!canTranslate} className={primaryButtonClass(!canTranslate)} onClick={translateStart}>
                 {isTranslating ? "Translating..." : "Translate and download"}
               </button>
 
               <button
                 type="button"
-                className="rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                className={secondaryButtonClass}
                 onClick={() => {
                   stopPolling();
                   setIsTranslating(false);
@@ -774,30 +825,21 @@ export default function Home() {
 
         {tab === "dual" && (
           <>
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-              <div className="text-center">
-                <h2 className="text-lg font-medium">Preview</h2>
-                <p className="mt-1 text-sm text-zinc-300">
-                  Preview uses a fixed {PLAYRES_W}x{PLAYRES_H} canvas. Exported values are in 1080p pixels (ASS PlayRes).
-                </p>
-                <p className="mt-1 text-xs text-zinc-400">The on-page preview is scaled to match its current size.</p>
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                <button
-                  disabled={!canGenerate || isGenerating}
-                  className={`rounded-md px-4 py-2 text-sm font-medium ${
-                    !canGenerate || isGenerating
-                      ? "bg-zinc-700 text-zinc-300 cursor-not-allowed"
-                      : "bg-white text-black hover:bg-zinc-200"
-                  }`}
-                  onClick={generateAss}
-                >
+            <section className={`${surfaceClass} p-5 sm:p-6`}>
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-cyan-200/70">ASS generator</div>
+                  <h2 className="mt-2 text-xl font-semibold">Preview and export</h2>
+                  <p className="mt-1 max-w-2xl text-sm text-zinc-400">
+                    Tune the 1080p subtitle canvas and export a single ASS file for VLC, MPV, and compatible players.
+                  </p>
+                </div>
+                <button disabled={!canGenerate || isGenerating} className={primaryButtonClass(!canGenerate || isGenerating)} onClick={generateAss}>
                   {isGenerating ? "Generating..." : "Generate dual subtitles file"}
                 </button>
               </div>
 
-              <div className="mt-5 relative" ref={fullscreenTargetRef}>
+              <div className="relative mt-5" ref={fullscreenTargetRef}>
                 <div ref={previewWrapRef}>
                   <PreviewCanvas
                     fontName={fontName}
@@ -813,7 +855,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => (isTrueFullscreen ? exitFullscreen() : enterFullscreen())}
-                  className="absolute bottom-3 right-3 z-20 rounded-md border border-zinc-700 bg-zinc-950/70 px-2.5 py-2 text-zinc-100 backdrop-blur hover:bg-zinc-900/80"
+                  className="absolute bottom-3 right-3 z-20 rounded-lg border border-white/10 bg-zinc-950/70 px-2.5 py-2 text-zinc-100 backdrop-blur transition hover:border-cyan-300/40 hover:bg-cyan-300/10"
                   aria-label={isTrueFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                   title={isTrueFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                 >
@@ -828,137 +870,47 @@ export default function Home() {
                 </button>
 
                 {isTrueFullscreen && (
-                  <div className="pointer-events-none absolute top-3 left-3 z-20 rounded-md border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-xs text-zinc-200 backdrop-blur">
+                  <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-lg border border-white/10 bg-zinc-950/70 px-3 py-2 text-xs text-zinc-200 backdrop-blur">
                     Press Esc to exit fullscreen
                   </div>
                 )}
               </div>
 
-              <div className="mt-3 flex justify-center text-xs text-zinc-400">
+              <div className="mt-3 flex justify-center text-xs text-zinc-500">
                 {!canGenerate ? "Upload both SRT files to enable generating." : "Ready to generate."}
               </div>
 
               {errorMsg && <p className="mt-2 text-center text-xs text-red-300">{errorMsg}</p>}
             </section>
 
-            <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-              <h2 className="text-lg font-medium">Settings</h2>
-              <p className="mt-1 text-sm text-zinc-300">
+            <section className={`${surfaceClass} mt-6 p-5 sm:p-6`}>
+              <h2 className="text-xl font-semibold">Settings</h2>
+              <p className="mt-1 text-sm text-zinc-400">
                 Choose font and adjust size/margins. Output keeps original timings from both SRT files.
               </p>
 
               <div className="mt-5 grid gap-6 lg:grid-cols-3">
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                <div className={panelClass}>
                   <div className="text-sm font-medium text-zinc-200">Files</div>
 
-                  <div className="mt-3">
-                    <label className="text-xs text-zinc-400">SRT (Top)</label>
-
-                    <div className="mt-2 flex items-center gap-3">
-                      <input
-                        ref={topInputRef}
-                        id="srtTopInput"
-                        type="file"
-                        accept=".srt"
-                        className="hidden"
-                        onChange={(e) => setTopFile(e.target.files?.[0] ?? null)}
-                      />
-
-                      {!topFile ? (
-                        <label
-                          htmlFor="srtTopInput"
-                          className="cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                        >
-                          Wybierz plik
-                        </label>
-                      ) : (
-                        <label
-                          htmlFor="srtTopInput"
-                          className="min-w-0 flex-1 cursor-pointer truncate rounded-md border border-zinc-800 bg-zinc-950/30 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/40"
-                          title="Kliknij, aby zmienić plik"
-                        >
-                          {topFile.name}
-                        </label>
-                      )}
-
-                      {!topFile && (
-                        <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">
-                          Nie wybrano pliku
-                        </span>
-                      )}
-
-                      {topFile && (
-                        <button
-                          type="button"
-                          onClick={clearTopFile}
-                          className="shrink-0 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-900"
-                          title="Wyczyść"
-                        >
-                          Usuń
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="text-xs text-zinc-400">SRT (Bottom)</label>
-
-                    <div className="mt-2 flex items-center gap-3">
-                      <input
-                        ref={bottomInputRef}
-                        id="srtBottomInput"
-                        type="file"
-                        accept=".srt"
-                        className="hidden"
-                        onChange={(e) => setBottomFile(e.target.files?.[0] ?? null)}
-                      />
-
-                      {!bottomFile ? (
-                        <label
-                          htmlFor="srtBottomInput"
-                          className="cursor-pointer rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                        >
-                          Wybierz plik
-                        </label>
-                      ) : (
-                        <label
-                          htmlFor="srtBottomInput"
-                          className="min-w-0 flex-1 cursor-pointer truncate rounded-md border border-zinc-800 bg-zinc-950/30 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900/40"
-                          title="Kliknij, aby zmienić plik"
-                        >
-                          {bottomFile.name}
-                        </label>
-                      )}
-
-                      {!bottomFile && (
-                        <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">
-                          Nie wybrano pliku
-                        </span>
-                      )}
-
-                      {bottomFile && (
-                        <button
-                          type="button"
-                          onClick={clearBottomFile}
-                          className="shrink-0 rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-900"
-                          title="Wyczyść"
-                        >
-                          Usuń
-                        </button>
-                      )}
-                    </div>
+                  <div className="mt-3 space-y-4">
+                    <FilePicker id="srtTopInput" label="SRT top" file={topFile} inputRef={topInputRef} onChange={setTopFile} onClear={clearTopFile} />
+                    <FilePicker
+                      id="srtBottomInput"
+                      label="SRT bottom"
+                      file={bottomFile}
+                      inputRef={bottomInputRef}
+                      onChange={setBottomFile}
+                      onClear={clearBottomFile}
+                    />
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                <div className={panelClass}>
                   <div className="text-sm font-medium text-zinc-200">Font</div>
 
-                  <label className="mt-3 block text-xs text-zinc-400">Font family</label>
-                  <select
-                    value={fontName}
-                    onChange={(e) => setFontName(e.target.value as (typeof FONTS)[number])}
-                    className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
-                  >
+                  <label className="mt-3 block text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">Font family</label>
+                  <select value={fontName} onChange={(e) => setFontName(e.target.value as (typeof FONTS)[number])} className={inputClass}>
                     {FONTS.map((f) => (
                       <option key={f} value={f}>
                         {f}
@@ -966,9 +918,7 @@ export default function Home() {
                     ))}
                   </select>
 
-                  <p className="mt-2 text-xs text-zinc-400">
-                    The font must be installed on the device where you play the video.
-                  </p>
+                  <p className="mt-2 text-xs text-zinc-500">The font must be installed on the device where you play the video.</p>
 
                   <div className="mt-4">
                     <SliderRow label="Font size" value={fontSize} min={24} max={90} onChange={setFontSize} />
@@ -976,22 +926,16 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-4">
-                  <SliderRow
-                    label="Top margin (distance from top)"
-                    value={marginVTop}
-                    min={0}
-                    max={200}
-                    onChange={setTopMargin}
-                  />
+                  <SliderRow label="Top margin" value={marginVTop} min={0} max={200} onChange={setTopMargin} />
 
                   <div className="flex items-center justify-center gap-3">
                     <button
                       type="button"
                       onClick={() => setLinkMargins((v) => !v)}
-                      className={`rounded-md border px-3 py-2 transition ${
+                      className={`rounded-lg border px-3 py-2 transition ${
                         linkMargins
-                          ? "border-white bg-white text-black"
-                          : "border-zinc-700 bg-zinc-950 text-zinc-200 hover:bg-zinc-900"
+                          ? "border-cyan-200/60 bg-cyan-200 text-zinc-950"
+                          : "border-white/10 bg-white/[0.035] text-zinc-200 hover:border-cyan-300/40 hover:bg-cyan-300/10"
                       }`}
                       title={linkMargins ? "Margins linked (click to unlink)" : "Margins separate (click to link)"}
                       aria-pressed={linkMargins}
@@ -999,18 +943,10 @@ export default function Home() {
                       <ChainIcon linked={linkMargins} />
                     </button>
 
-                    <span className="text-xs text-zinc-400">
-                      {linkMargins ? "Margins are linked" : "Margins are separate"}
-                    </span>
+                    <span className="text-xs text-zinc-500">{linkMargins ? "Margins are linked" : "Margins are separate"}</span>
                   </div>
 
-                  <SliderRow
-                    label="Bottom margin (distance from bottom)"
-                    value={marginVBottom}
-                    min={0}
-                    max={200}
-                    onChange={setBottomMargin}
-                  />
+                  <SliderRow label="Bottom margin" value={marginVBottom} min={0} max={200} onChange={setBottomMargin} />
                 </div>
               </div>
             </section>
@@ -1048,17 +984,16 @@ export default function Home() {
           }}
         />
 
-        <section className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 text-left">
+        <section className="mx-auto mt-12 max-w-4xl border-t border-white/10 pt-8 text-left">
           <h2 className="text-xl font-semibold text-zinc-100">What this tool does</h2>
-          <p className="mt-3 text-zinc-300">
-            DualSubs helps you create dual subtitles (two languages at once) and convert subtitles from SRT to ASS. You
-            can also translate subtitles with AI while keeping the original timings.
+          <p className="mt-3 leading-7 text-zinc-400">
+            DualSubs helps you create dual subtitles, convert SRT to ASS, and translate subtitles with AI while keeping original timings.
           </p>
 
-          <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <div className="mt-7 grid gap-7 md:grid-cols-2">
             <div>
               <h3 className="text-base font-semibold text-zinc-100">Who is this for?</h3>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-zinc-300">
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-zinc-400">
                 <li>Anime watchers who want original + translation on-screen</li>
                 <li>Language learners combining native and target language</li>
                 <li>Movie/TV translators who need quick bilingual output</li>
@@ -1068,39 +1003,38 @@ export default function Home() {
 
             <div>
               <h3 className="text-base font-semibold text-zinc-100">Why ASS instead of SRT?</h3>
-              <p className="mt-2 text-zinc-300">
-                SRT is simple and widely supported, but it cannot reliably position two languages at different screen
-                locations. ASS supports styles, margins, and positioning, so you can keep one language at the top and
-                the other at the bottom.
+              <p className="mt-2 leading-7 text-zinc-400">
+                SRT is simple and widely supported, but it cannot reliably position two languages at different screen locations. ASS supports styles, margins, and positioning.
               </p>
             </div>
           </div>
 
-          <div className="mt-6">
-            <h3 className="text-base font-semibold text-zinc-100">Popular searches</h3>
-            <p className="mt-2 text-zinc-300">
-              dual subtitles VLC, two languages subtitles VLC, merge SRT files, SRT to ASS dual subtitles, anime dual
-              subtitles, learn language with subtitles
-            </p>
-          </div>
+          <div className="mt-7 grid gap-7 md:grid-cols-2">
+            <div>
+              <h3 className="text-base font-semibold text-zinc-100">Popular searches</h3>
+              <p className="mt-2 leading-7 text-zinc-400">
+                dual subtitles VLC, two languages subtitles VLC, merge SRT files, SRT to ASS dual subtitles, anime dual subtitles, learn language with subtitles
+              </p>
+            </div>
 
-          <div className="mt-6">
-            <h3 className="text-base font-semibold text-zinc-100">Trust and privacy</h3>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-zinc-300">
-              <li>Your files are processed only to generate the output.</li>
-              <li>No accounts required.</li>
-              <li>If you need strict guarantees, consider self-hosting.</li>
-            </ul>
+            <div>
+              <h3 className="text-base font-semibold text-zinc-100">Trust and privacy</h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-zinc-400">
+                <li>Your files are processed only to generate the output.</li>
+                <li>No accounts required.</li>
+                <li>If you need strict guarantees, consider self-hosting.</li>
+              </ul>
+            </div>
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 text-left">
+        <section className="mx-auto mt-8 max-w-4xl border-t border-white/10 pt-8 text-left">
           <h2 className="text-xl font-semibold text-zinc-100">FAQ</h2>
           <div className="mt-4 space-y-3">
             {FAQ_ITEMS.map((item) => (
-              <details key={item.q} className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+              <details key={item.q} className="rounded-xl border border-white/10 bg-white/[0.025] p-4">
                 <summary className="cursor-pointer text-zinc-100">{item.q}</summary>
-                <p className="mt-2 text-zinc-300">{item.a}</p>
+                <p className="mt-2 leading-7 text-zinc-400">{item.a}</p>
               </details>
             ))}
           </div>
@@ -1112,3 +1046,4 @@ export default function Home() {
     </main>
   );
 }
+
