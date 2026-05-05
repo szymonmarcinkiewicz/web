@@ -21,6 +21,11 @@ const PLAYRES_H = 1080;
 
 type TabKey = "dual" | "translate";
 
+type GoogleFcApi = {
+  callbackQueue?: Array<() => void>;
+  showRevocationMessage?: () => void;
+};
+
 const SITE_NAME = "DualSubs";
 const SEO_TITLE = "Dual subtitles (SRT to ASS) - Merge and Translate Subtitles Online";
 const SEO_DESCRIPTION =
@@ -119,6 +124,17 @@ function clamp(n: number, min: number, max: number) {
 
 function errorMessage(err: unknown, fallback = "Unknown error") {
   return err instanceof Error ? err.message : fallback;
+}
+
+function openPrivacySettings() {
+  const googlefc = (window as Window & { googlefc?: GoogleFcApi }).googlefc;
+
+  if (googlefc?.callbackQueue && googlefc.showRevocationMessage) {
+    googlefc.callbackQueue.push(googlefc.showRevocationMessage);
+    return;
+  }
+
+  alert("Privacy and cookie settings are available after the consent message loads.");
 }
 
 function ChainIcon(props: { linked: boolean }) {
@@ -1127,6 +1143,18 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        <footer className="mx-auto mt-10 flex max-w-4xl flex-col gap-3 border-t border-white/10 py-6 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+          <div>DualSubs</div>
+          <div className="flex flex-wrap gap-4">
+            <a href="/privacy" className="transition hover:text-cyan-200">
+              Privacy Policy
+            </a>
+            <button type="button" onClick={openPrivacySettings} className="transition hover:text-cyan-200">
+              Privacy and cookie settings
+            </button>
+          </div>
+        </footer>
 
         {translateInfo && <p className="mt-3 text-center text-xs text-emerald-300">{translateInfo}</p>}
         {translateError && <p className="mt-3 text-center text-xs text-red-300">{translateError}</p>}
