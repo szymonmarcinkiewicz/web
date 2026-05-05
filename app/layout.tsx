@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "DualSubs - Dual Subtitles and SRT Translation",
   description: "Create dual subtitles, merge SRT files into ASS, and translate subtitles while preserving timings.",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

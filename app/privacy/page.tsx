@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 type GoogleFcApi = {
@@ -25,8 +26,15 @@ export default function PrivacyPage() {
 
       <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <header className="border-b border-white/10 pb-6">
-          <Link href="/" className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">
-            DualSubs
+          <Link href="/" className="flex w-fit items-center gap-3">
+            <Image
+              src="/Logo.png"
+              alt="DualSubs"
+              width={44}
+              height={44}
+              className="h-11 w-11 rounded-xl border border-white/10 object-cover shadow-[0_0_24px_rgba(103,232,249,0.12)]"
+            />
+            <span className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">DualSubs</span>
           </Link>
           <h1 className="mt-4 text-3xl font-semibold text-zinc-50">Privacy Policy</h1>
           <p className="mt-3 text-sm leading-6 text-zinc-400">Effective date: May 5, 2026</p>

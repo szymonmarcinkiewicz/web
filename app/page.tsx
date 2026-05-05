@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE!;
@@ -752,7 +753,16 @@ export default function Home() {
         <div className="min-w-0">
         <header className="mb-6 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
-            <div className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">{SITE_NAME}</div>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/Logo.png"
+                alt="DualSubs"
+                width={44}
+                height={44}
+                className="h-11 w-11 rounded-xl border border-white/10 object-cover shadow-[0_0_24px_rgba(103,232,249,0.12)]"
+              />
+              <div className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">{SITE_NAME}</div>
+            </div>
             <h1 className="mt-3 text-3xl font-semibold tracking-normal text-zinc-50 md:text-4xl">
               Dual subtitles, without the heavy editor.
             </h1>
@@ -1145,7 +1155,10 @@ export default function Home() {
         </section>
 
         <footer className="mx-auto mt-10 flex max-w-4xl flex-col gap-3 border-t border-white/10 py-6 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <div>DualSubs</div>
+          <div className="flex items-center gap-2">
+            <Image src="/Logo.png" alt="" width={28} height={28} className="h-7 w-7 rounded-lg object-cover" />
+            <span>DualSubs</span>
+          </div>
           <div className="flex flex-wrap gap-4">
             <a href="/privacy" className="transition hover:text-cyan-200">
               Privacy Policy
