@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE!;
@@ -28,7 +29,7 @@ type GoogleFcApi = {
 };
 
 const SITE_NAME = "DualSubs";
-const SEO_TITLE = "Dual subtitles (SRT to ASS) - Merge and Translate Subtitles Online";
+const SEO_TITLE = "DualSubs";
 const SEO_DESCRIPTION =
   "Create dual subtitles easily. Merge two SRT files into one ASS or translate subtitles with AI. Works with VLC and MPV - timings preserved.";
 
@@ -751,27 +752,28 @@ export default function Home() {
         <DesktopAdRail side="left" />
 
         <div className="min-w-0">
-        <header className="mb-6 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-3">
+        <header className="mb-6 flex flex-col items-center gap-5 text-center">
+          <div className="mx-auto max-w-2xl">
+            <Link href="/" className="mx-auto flex w-fit flex-col items-center gap-3" aria-label="DualSubs home">
               <Image
                 src="/Logo.png"
                 alt="DualSubs"
-                width={44}
-                height={44}
-                className="h-11 w-11 rounded-xl border border-white/10 object-cover shadow-[0_0_24px_rgba(103,232,249,0.12)]"
+                width={96}
+                height={96}
+                priority
+                className="h-24 w-24 rounded-2xl border border-white/10 object-cover shadow-[0_0_36px_rgba(103,232,249,0.16)]"
               />
               <div className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">{SITE_NAME}</div>
-            </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-normal text-zinc-50 md:text-4xl">
+            </Link>
+            <h1 className="mt-4 text-3xl font-semibold tracking-normal text-zinc-50 md:text-4xl">
               Dual subtitles, without the heavy editor.
             </h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400 md:text-base">
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400 md:text-base">
               Translate SRT files with preserved timings or generate ASS subtitles with top and bottom language tracks.
             </p>
           </div>
 
-          <div className="inline-grid w-full grid-cols-2 rounded-xl border border-white/10 bg-black/30 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur md:w-auto">
+          <div className="inline-grid w-full grid-cols-2 rounded-xl border border-white/10 bg-black/30 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur sm:w-auto">
             <button
               type="button"
               onClick={() => setTab("translate")}
@@ -1155,14 +1157,14 @@ export default function Home() {
         </section>
 
         <footer className="mx-auto mt-10 flex max-w-4xl flex-col gap-3 border-t border-white/10 py-6 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex w-fit items-center gap-2 transition hover:text-cyan-200" aria-label="DualSubs home">
             <Image src="/Logo.png" alt="" width={28} height={28} className="h-7 w-7 rounded-lg object-cover" />
             <span>DualSubs</span>
-          </div>
+          </Link>
           <div className="flex flex-wrap gap-4">
-            <a href="/privacy" className="transition hover:text-cyan-200">
+            <Link href="/privacy" className="transition hover:text-cyan-200">
               Privacy Policy
-            </a>
+            </Link>
             <button type="button" onClick={openPrivacySettings} className="transition hover:text-cyan-200">
               Privacy and cookie settings
             </button>
