@@ -16,8 +16,11 @@ export const metadata: Metadata = {
   title: "DualSubs - Dual Subtitles and SRT Translation",
   description: "Create dual subtitles, merge SRT files into ASS, and translate subtitles while preserving timings.",
   icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
+    icon: [
+      { url: "/favicon.ico", type: "image/x-icon" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
     apple: "/favicon.png",
   },
 };
