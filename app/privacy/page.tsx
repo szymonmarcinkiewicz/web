@@ -22,7 +22,7 @@ function openPrivacySettings() {
 export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-[#050607] text-zinc-100">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.12),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(74,222,128,0.07),transparent_28%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(37,99,235,0.18),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(239,68,68,0.12),transparent_28%)]" />
 
       <div className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <header className="border-b border-white/10 pb-6">
@@ -32,9 +32,9 @@ export default function PrivacyPage() {
               alt="DualSubs"
               width={44}
               height={44}
-              className="h-11 w-11 rounded-xl border border-white/10 object-cover shadow-[0_0_24px_rgba(103,232,249,0.12)]"
+              className="h-11 w-11 rounded-xl border border-white/10 object-cover shadow-[0_0_24px_rgba(59,130,246,0.16)]"
             />
-            <span className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">DualSubs</span>
+            <span className="text-sm font-semibold tracking-[0.22em] text-blue-400/80">DualSubs</span>
           </Link>
           <h1 className="mt-4 text-3xl font-semibold text-zinc-50">Privacy Policy</h1>
           <p className="mt-3 text-sm leading-6 text-zinc-400">Effective date: May 5, 2026</p>
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
             <button
               type="button"
               onClick={openPrivacySettings}
-              className="mt-4 rounded-lg border border-cyan-200/60 bg-cyan-200 px-4 py-2 text-sm font-medium text-zinc-950 shadow-[0_0_28px_rgba(103,232,249,0.18)] transition hover:bg-cyan-100"
+              className="mt-4 rounded-lg border border-blue-400/60 bg-blue-400 px-4 py-2 text-sm font-medium text-zinc-950 shadow-[0_0_28px_rgba(59,130,246,0.22)] transition hover:bg-blue-100"
             >
               Privacy and cookie settings
             </button>
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
         </section>
 
         <footer className="mt-10 border-t border-white/10 pt-6 text-sm text-zinc-500">
-          <Link href="/" className="transition hover:text-cyan-200">
+          <Link href="/" className="transition hover:text-blue-400">
             Back to DualSubs
           </Link>
         </footer>
@@ -119,3 +119,4 @@ export default function PrivacyPage() {
     </main>
   );
 }
+

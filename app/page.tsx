@@ -37,15 +37,15 @@ const surfaceClass =
   "rounded-2xl border border-white/10 bg-zinc-950/70 shadow-[0_24px_80px_rgba(0,0,0,0.42)] backdrop-blur";
 const panelClass = "rounded-xl border border-white/10 bg-white/[0.035] p-4";
 const inputClass =
-  "mt-2 block w-full rounded-lg border border-white/10 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-cyan-300/70 focus:ring-2 focus:ring-cyan-300/15 disabled:opacity-60";
+  "mt-2 block w-full rounded-lg border border-white/10 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-blue-500/70 focus:ring-2 focus:ring-blue-500/15 disabled:opacity-60";
 const secondaryButtonClass =
-  "rounded-lg border border-white/10 bg-white/[0.035] px-4 py-2 text-sm text-zinc-200 transition hover:border-cyan-300/40 hover:bg-cyan-300/10";
+  "rounded-lg border border-white/10 bg-white/[0.035] px-4 py-2 text-sm text-zinc-200 transition hover:border-blue-500/40 hover:bg-blue-500/10";
 
 function primaryButtonClass(disabled: boolean) {
   return `rounded-lg px-4 py-2 text-sm font-medium transition ${
     disabled
       ? "cursor-not-allowed border border-white/10 bg-zinc-800 text-zinc-500"
-      : "border border-cyan-200/60 bg-cyan-200 text-zinc-950 shadow-[0_0_28px_rgba(103,232,249,0.18)] hover:bg-cyan-100"
+      : "border border-blue-400/60 bg-blue-400 text-zinc-950 shadow-[0_0_28px_rgba(59,130,246,0.22)] hover:bg-blue-100"
   }`;
 }
 
@@ -206,12 +206,12 @@ function FilePicker(props: {
             disabled
               ? "pointer-events-none border-white/10 bg-zinc-900/50 opacity-60"
               : file
-                ? "border-cyan-300/35 bg-cyan-300/[0.055] hover:border-cyan-200/60"
-                : "border-white/10 bg-zinc-950/60 hover:border-cyan-300/45 hover:bg-cyan-300/[0.04]"
+                ? "border-blue-500/35 bg-blue-500/[0.055] hover:border-blue-400/60"
+                : "border-white/10 bg-zinc-950/60 hover:border-blue-500/45 hover:bg-blue-500/[0.04]"
           }`}
           title={file ? "Kliknij, aby zmienic plik" : "Wybierz plik"}
         >
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.045] text-cyan-200">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.045] text-blue-400">
             <FileIcon />
           </span>
           <span className="min-w-0">
@@ -251,7 +251,7 @@ function AdSlot(props: { variant?: "rail" | "inline" | "modal"; title?: string }
         className={`${sizeClass} overflow-hidden rounded-xl border border-dashed border-white/10 bg-white/[0.025] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]`}
       >
         <div className="flex h-full min-h-[inherit] flex-col items-center justify-center gap-3 p-5">
-          <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-medium text-cyan-100">
+          <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-100">
             Sample ad
           </div>
           <div className="max-w-[220px] text-sm font-medium text-zinc-300">Your ad creative here</div>
@@ -285,14 +285,14 @@ function ProgressBar(props: { pct: number; label: string }) {
     <div className="rounded-xl border border-white/10 bg-zinc-950/55 p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-medium text-zinc-200">{label}</div>
-        <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-xs tabular-nums text-cyan-100">
+        <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-xs tabular-nums text-blue-100">
           {Math.round(clamped)}%
         </div>
       </div>
 
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-800/80">
         <div
-          className="h-2 rounded-full bg-cyan-200 shadow-[0_0_18px_rgba(103,232,249,0.42)]"
+          className="h-2 rounded-full bg-blue-400 shadow-[0_0_18px_rgba(59,130,246,0.48)]"
           style={{ width: `${clamped}%` }}
         />
       </div>
@@ -359,7 +359,7 @@ function PreviewCanvas(props: {
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-950 shadow-[inset_0_0_80px_rgba(0,0,0,0.65)]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(34,211,238,0.16),transparent_28%),linear-gradient(135deg,#18181b,#09090b_62%,#050505)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(37,99,235,0.22),transparent_28%),linear-gradient(135deg,#18181b,#09090b_62%,#050505)]" />
       <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:44px_44px]" />
       <div className="absolute left-3 top-3 rounded-md border border-white/10 bg-black/35 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-400 backdrop-blur">
         {PLAYRES_W}x{PLAYRES_H}
@@ -745,7 +745,7 @@ export default function Home() {
         }
       `}</style>
 
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.15),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(74,222,128,0.08),transparent_28%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(37,99,235,0.20),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(239,68,68,0.13),transparent_28%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:56px_56px]" />
 
       <div className="relative mx-auto grid max-w-[1500px] grid-cols-1 gap-6 px-4 py-8 sm:px-6 lg:py-10 2xl:grid-cols-[180px_minmax(0,72rem)_180px]">
@@ -761,12 +761,12 @@ export default function Home() {
                 width={96}
                 height={96}
                 priority
-                className="h-24 w-24 rounded-2xl border border-white/10 object-cover shadow-[0_0_36px_rgba(103,232,249,0.16)]"
+                className="h-24 w-24 rounded-2xl border border-white/10 object-cover shadow-[0_0_36px_rgba(59,130,246,0.18)]"
               />
             </Link>
 
             <div className="min-w-0 text-left">
-              <div className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">{SITE_NAME}</div>
+              <div className="text-sm font-semibold tracking-[0.22em] text-blue-400/80">{SITE_NAME}</div>
               <h1 className="mt-2 text-3xl font-semibold tracking-normal text-zinc-50 md:text-4xl">
                 Dual subtitles, without the heavy editor.
               </h1>
@@ -781,7 +781,7 @@ export default function Home() {
                     onClick={() => setTab("translate")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                       tab === "translate"
-                        ? "bg-cyan-200 text-zinc-950 shadow-[0_0_22px_rgba(103,232,249,0.18)]"
+                        ? "bg-blue-400 text-zinc-950 shadow-[0_0_22px_rgba(59,130,246,0.22)]"
                         : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100"
                     }`}
                     aria-pressed={tab === "translate"}
@@ -794,7 +794,7 @@ export default function Home() {
                     onClick={() => setTab("dual")}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                       tab === "dual"
-                        ? "bg-cyan-200 text-zinc-950 shadow-[0_0_22px_rgba(103,232,249,0.18)]"
+                        ? "bg-blue-400 text-zinc-950 shadow-[0_0_22px_rgba(59,130,246,0.22)]"
                         : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100"
                     }`}
                     aria-pressed={tab === "dual"}
@@ -811,11 +811,11 @@ export default function Home() {
           <section className={`${surfaceClass} p-5 sm:p-6`}>
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <div className="text-xs font-medium uppercase tracking-[0.18em] text-cyan-200/70">AI workflow</div>
+                <div className="text-xs font-medium uppercase tracking-[0.18em] text-blue-400/70">AI workflow</div>
                 <h2 className="mt-2 text-xl font-semibold">Translate SRT</h2>
                 <p className="mt-1 text-sm text-zinc-400">Upload one file and get a translated SRT with original timings.</p>
               </div>
-              <div className="w-fit rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs text-emerald-100">
+              <div className="w-fit rounded-full border border-red-400/20 bg-red-400/10 px-3 py-1 text-xs text-red-100">
                 Timings preserved
               </div>
             </div>
@@ -886,7 +886,7 @@ export default function Home() {
               </button>
             </div>
 
-            {translateInfo && <p className="mt-3 text-center text-xs text-emerald-300">{translateInfo}</p>}
+            {translateInfo && <p className="mt-3 text-center text-xs text-blue-400">{translateInfo}</p>}
             {translateError && <p className="mt-3 text-center text-xs text-red-300">{translateError}</p>}
           </section>
         )}
@@ -896,7 +896,7 @@ export default function Home() {
             <section className={`${surfaceClass} p-5 sm:p-6`}>
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-cyan-200/70">ASS generator</div>
+                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-blue-400/70">ASS generator</div>
                   <h2 className="mt-2 text-xl font-semibold">Preview and export</h2>
                   <p className="mt-1 max-w-2xl text-sm text-zinc-400">
                     Tune the 1080p subtitle canvas and export a single ASS file for VLC, MPV, and compatible players.
@@ -923,7 +923,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => (isTrueFullscreen ? exitFullscreen() : enterFullscreen())}
-                  className="absolute bottom-3 right-3 z-20 rounded-lg border border-white/10 bg-zinc-950/70 px-2.5 py-2 text-zinc-100 backdrop-blur transition hover:border-cyan-300/40 hover:bg-cyan-300/10"
+                  className="absolute bottom-3 right-3 z-20 rounded-lg border border-white/10 bg-zinc-950/70 px-2.5 py-2 text-zinc-100 backdrop-blur transition hover:border-blue-500/40 hover:bg-blue-500/10"
                   aria-label={isTrueFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                   title={isTrueFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                 >
@@ -1002,8 +1002,8 @@ export default function Home() {
                       onClick={() => setLinkMargins((v) => !v)}
                       className={`rounded-lg border px-3 py-2 transition ${
                         linkMargins
-                          ? "border-cyan-200/60 bg-cyan-200 text-zinc-950"
-                          : "border-white/10 bg-white/[0.035] text-zinc-200 hover:border-cyan-300/40 hover:bg-cyan-300/10"
+                          ? "border-blue-400/60 bg-blue-400 text-zinc-950"
+                          : "border-white/10 bg-white/[0.035] text-zinc-200 hover:border-blue-500/40 hover:bg-blue-500/10"
                       }`}
                       title={linkMargins ? "Margins linked (click to unlink)" : "Margins separate (click to link)"}
                       aria-pressed={linkMargins}
@@ -1030,7 +1030,7 @@ export default function Home() {
             <div className="w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_30px_120px_rgba(0,0,0,0.7)]">
               <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-cyan-200/70">
+                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-blue-400/70">
                     Translation progress
                   </div>
                   <h2 className="mt-2 text-xl font-semibold text-zinc-50">
@@ -1044,7 +1044,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setIsProgressModalOpen(false)}
-                  className="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2 text-sm text-zinc-300 transition hover:border-cyan-300/40 hover:bg-cyan-300/10"
+                  className="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2 text-sm text-zinc-300 transition hover:border-blue-500/40 hover:bg-blue-500/10"
                   aria-label="Close progress modal"
                 >
                   Close
@@ -1063,7 +1063,7 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="mt-3 truncate text-xs text-zinc-500">{jobId ? `Job: ${jobId}` : "Preparing job..."}</div>
-                    {translateInfo && <p className="mt-3 text-sm text-emerald-300">{translateInfo}</p>}
+                    {translateInfo && <p className="mt-3 text-sm text-blue-400">{translateInfo}</p>}
                     {translateError && <p className="mt-3 text-sm text-red-300">{translateError}</p>}
                   </div>
                 </div>
@@ -1162,21 +1162,21 @@ export default function Home() {
         </section>
 
         <footer className="mx-auto mt-10 flex max-w-4xl flex-col gap-3 border-t border-white/10 py-6 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/" className="flex w-fit items-center gap-2 transition hover:text-cyan-200" aria-label="DualSubs home">
+          <Link href="/" className="flex w-fit items-center gap-2 transition hover:text-blue-400" aria-label="DualSubs home">
             <Image src="/Logo.png" alt="" width={28} height={28} className="h-7 w-7 rounded-lg object-cover" />
             <span>DualSubs</span>
           </Link>
           <div className="flex flex-wrap gap-4">
-            <Link href="/privacy" className="transition hover:text-cyan-200">
+            <Link href="/privacy" className="transition hover:text-blue-400">
               Privacy Policy
             </Link>
-            <button type="button" onClick={openPrivacySettings} className="transition hover:text-cyan-200">
+            <button type="button" onClick={openPrivacySettings} className="transition hover:text-blue-400">
               Privacy and cookie settings
             </button>
           </div>
         </footer>
 
-        {translateInfo && <p className="mt-3 text-center text-xs text-emerald-300">{translateInfo}</p>}
+        {translateInfo && <p className="mt-3 text-center text-xs text-blue-400">{translateInfo}</p>}
         {translateError && <p className="mt-3 text-center text-xs text-red-300">{translateError}</p>}
         </div>
 
@@ -1185,4 +1185,5 @@ export default function Home() {
     </main>
   );
 }
+
 
