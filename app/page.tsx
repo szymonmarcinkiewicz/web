@@ -191,7 +191,7 @@ function FilePicker(props: {
                 ? "border-cyan-300/35 bg-cyan-300/[0.055] hover:border-cyan-200/60"
                 : "border-white/10 bg-zinc-950/60 hover:border-cyan-300/45 hover:bg-cyan-300/[0.04]"
           }`}
-          title={file ? "Kliknij, aby zmienić plik" : "Wybierz plik"}
+          title={file ? "Kliknij, aby zmienic plik" : "Wybierz plik"}
         >
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.045] text-cyan-200">
             <FileIcon />
@@ -207,12 +207,55 @@ function FilePicker(props: {
         </label>
 
         {file && !disabled && (
-          <button type="button" onClick={onClear} className={secondaryButtonClass} title="Wyczyść">
-            Usuń
+          <button type="button" onClick={onClear} className={secondaryButtonClass} title="Wyczysc">
+            Usun
           </button>
         )}
       </div>
     </div>
+  );
+}
+
+function AdSlot(props: { variant?: "rail" | "inline" | "modal"; title?: string }) {
+  const { variant = "inline", title = "Advertisement" } = props;
+
+  const sizeClass =
+    variant === "rail"
+      ? "h-[600px] w-[160px]"
+      : variant === "modal"
+        ? "min-h-[220px] w-full"
+        : "min-h-[250px] w-full";
+
+  return (
+    <div className="text-center">
+      <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-600">{title}</div>
+      <div
+        className={`${sizeClass} overflow-hidden rounded-xl border border-dashed border-white/10 bg-white/[0.025] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]`}
+      >
+        <div className="flex h-full min-h-[inherit] flex-col items-center justify-center gap-3 p-5">
+          <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-medium text-cyan-100">
+            Sample ad
+          </div>
+          <div className="max-w-[220px] text-sm font-medium text-zinc-300">Your ad creative here</div>
+          <div className="max-w-[220px] text-xs leading-5 text-zinc-500">
+            Fixed-size placeholder for AdSense or another display network.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DesktopAdRail(props: { side: "left" | "right" }) {
+  return (
+    <aside
+      className={`sticky top-8 hidden self-start 2xl:block ${
+        props.side === "left" ? "justify-self-end" : "justify-self-start"
+      }`}
+      aria-label={`${props.side} advertisement rail`}
+    >
+      <AdSlot variant="rail" />
+    </aside>
   );
 }
 
@@ -529,6 +572,7 @@ export default function Home() {
 
   const [progressPct, setProgressPct] = useState<number>(0);
   const [progressStage, setProgressStage] = useState<string>("Idle");
+  const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
 
   const pollRef = useRef<number | null>(null);
 
@@ -574,6 +618,7 @@ export default function Home() {
     setTranslateError(null);
     setTranslateInfo(null);
     setIsTranslating(true);
+    setIsProgressModalOpen(true);
     setProgressPct(0);
     setProgressStage("Queued");
     setJobId(null);
@@ -685,7 +730,10 @@ export default function Home() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.15),transparent_32%),radial-gradient(circle_at_82%_18%,rgba(74,222,128,0.08),transparent_28%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:56px_56px]" />
 
-      <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
+      <div className="relative mx-auto grid max-w-[1500px] grid-cols-1 gap-6 px-4 py-8 sm:px-6 lg:py-10 2xl:grid-cols-[180px_minmax(0,72rem)_180px]">
+        <DesktopAdRail side="left" />
+
+        <div className="min-w-0">
         <header className="mb-6 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <div className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">{SITE_NAME}</div>
@@ -739,7 +787,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-6 lg:grid-cols-3">
+            <div className="mt-5 grid gap-6 lg:grid-cols-2">
               <div className={panelClass}>
                 <div className="text-sm font-medium text-zinc-200">Input</div>
                 <div className="mt-3">
@@ -777,20 +825,6 @@ export default function Home() {
                 </select>
               </div>
 
-              <div className={panelClass}>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-zinc-200">Progress</div>
-                  <div className="rounded-full border border-white/10 bg-white/[0.035] px-2 py-0.5 text-xs text-zinc-400">
-                    {jobId ? "Running" : "Idle"}
-                  </div>
-                </div>
-
-                <div className="mt-3">
-                  <ProgressBar pct={progressPct} label={progressStage} />
-                </div>
-
-                <div className="mt-3 truncate text-xs text-zinc-500">{jobId ? `Job: ${jobId}` : "No job yet"}</div>
-              </div>
             </div>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -804,6 +838,7 @@ export default function Home() {
                 onClick={() => {
                   stopPolling();
                   setIsTranslating(false);
+                  setIsProgressModalOpen(false);
                   setJobId(null);
                   setProgressPct(0);
                   setProgressStage("Idle");
@@ -950,7 +985,60 @@ export default function Home() {
                 </div>
               </div>
             </section>
+
+            <div className="mt-8 2xl:hidden">
+              <AdSlot />
+            </div>
           </>
+        )}
+
+        {isProgressModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8 backdrop-blur-sm">
+            <div className="w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-[0_30px_120px_rgba(0,0,0,0.7)]">
+              <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-cyan-200/70">
+                    Translation progress
+                  </div>
+                  <h2 className="mt-2 text-xl font-semibold text-zinc-50">
+                    {isTranslating ? "Working on your subtitles" : translateError ? "Translation needs attention" : "Download ready"}
+                  </h2>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    This window keeps the task visible while the file is being translated.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsProgressModalOpen(false)}
+                  className="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2 text-sm text-zinc-300 transition hover:border-cyan-300/40 hover:bg-cyan-300/10"
+                  aria-label="Close progress modal"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+                <div className="space-y-4">
+                  <ProgressBar pct={progressPct} label={translateError ? "Error" : progressStage} />
+
+                  <div className={panelClass}>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-zinc-200">Status</span>
+                      <span className="rounded-full border border-white/10 bg-white/[0.035] px-2 py-0.5 text-xs text-zinc-400">
+                        {translateError ? "Error" : isTranslating ? "Running" : "Finished"}
+                      </span>
+                    </div>
+                    <div className="mt-3 truncate text-xs text-zinc-500">{jobId ? `Job: ${jobId}` : "Preparing job..."}</div>
+                    {translateInfo && <p className="mt-3 text-sm text-emerald-300">{translateInfo}</p>}
+                    {translateError && <p className="mt-3 text-sm text-red-300">{translateError}</p>}
+                  </div>
+                </div>
+
+                <AdSlot variant="modal" />
+              </div>
+            </div>
+          </div>
         )}
 
         <script
@@ -1042,6 +1130,9 @@ export default function Home() {
 
         {translateInfo && <p className="mt-3 text-center text-xs text-emerald-300">{translateInfo}</p>}
         {translateError && <p className="mt-3 text-center text-xs text-red-300">{translateError}</p>}
+        </div>
+
+        <DesktopAdRail side="right" />
       </div>
     </main>
   );
