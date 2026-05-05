@@ -752,9 +752,9 @@ export default function Home() {
         <DesktopAdRail side="left" />
 
         <div className="min-w-0">
-        <header className="mb-6 flex flex-col items-center gap-5 text-center">
-          <div className="mx-auto max-w-2xl">
-            <Link href="/" className="mx-auto flex w-fit flex-col items-center gap-3" aria-label="DualSubs home">
+        <header className="mb-6">
+          <div className="grid items-start gap-5 sm:grid-cols-[96px_minmax(0,1fr)]">
+            <Link href="/" className="w-fit" aria-label="DualSubs home">
               <Image
                 src="/Logo.png"
                 alt="DualSubs"
@@ -763,42 +763,47 @@ export default function Home() {
                 priority
                 className="h-24 w-24 rounded-2xl border border-white/10 object-cover shadow-[0_0_36px_rgba(103,232,249,0.16)]"
               />
-              <div className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">{SITE_NAME}</div>
             </Link>
-            <h1 className="mt-4 text-3xl font-semibold tracking-normal text-zinc-50 md:text-4xl">
-              Dual subtitles, without the heavy editor.
-            </h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400 md:text-base">
-              Translate SRT files with preserved timings or generate ASS subtitles with top and bottom language tracks.
-            </p>
-          </div>
 
-          <div className="inline-grid w-full grid-cols-2 rounded-xl border border-white/10 bg-black/30 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur sm:w-auto">
-            <button
-              type="button"
-              onClick={() => setTab("translate")}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                tab === "translate"
-                  ? "bg-cyan-200 text-zinc-950 shadow-[0_0_22px_rgba(103,232,249,0.18)]"
-                  : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100"
-              }`}
-              aria-pressed={tab === "translate"}
-            >
-              AI Translate
-            </button>
+            <div className="min-w-0 text-left">
+              <div className="text-sm font-semibold tracking-[0.22em] text-cyan-200/80">{SITE_NAME}</div>
+              <h1 className="mt-2 text-3xl font-semibold tracking-normal text-zinc-50 md:text-4xl">
+                Dual subtitles, without the heavy editor.
+              </h1>
+              <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <p className="max-w-xl text-sm leading-6 text-zinc-400 md:text-base">
+                  Translate SRT files with preserved timings or generate ASS subtitles with top and bottom language tracks.
+                </p>
 
-            <button
-              type="button"
-              onClick={() => setTab("dual")}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                tab === "dual"
-                  ? "bg-cyan-200 text-zinc-950 shadow-[0_0_22px_rgba(103,232,249,0.18)]"
-                  : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100"
-              }`}
-              aria-pressed={tab === "dual"}
-            >
-              Dual ASS Generator
-            </button>
+                <div className="inline-grid w-full shrink-0 grid-cols-2 rounded-xl border border-white/10 bg-black/30 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setTab("translate")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      tab === "translate"
+                        ? "bg-cyan-200 text-zinc-950 shadow-[0_0_22px_rgba(103,232,249,0.18)]"
+                        : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100"
+                    }`}
+                    aria-pressed={tab === "translate"}
+                  >
+                    AI Translate
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTab("dual")}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      tab === "dual"
+                        ? "bg-cyan-200 text-zinc-950 shadow-[0_0_22px_rgba(103,232,249,0.18)]"
+                        : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100"
+                    }`}
+                    aria-pressed={tab === "dual"}
+                  >
+                    Dual ASS Generator
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </header>
 
