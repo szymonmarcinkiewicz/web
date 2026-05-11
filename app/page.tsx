@@ -209,24 +209,24 @@ function FilePicker(props: {
                 ? "border-blue-500/35 bg-blue-500/[0.055] hover:border-blue-400/60"
                 : "border-white/10 bg-zinc-950/60 hover:border-blue-500/45 hover:bg-blue-500/[0.04]"
           }`}
-          title={file ? "Kliknij, aby zmienic plik" : "Wybierz plik"}
+          title={file ? "Click to change file" : "Choose file"}
         >
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.045] text-blue-400">
             <FileIcon />
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium text-zinc-100">
-              {file ? file.name : "Wybierz plik SRT"}
+              {file ? file.name : "Choose SRT file"}
             </span>
             <span className="mt-0.5 block text-xs text-zinc-500">
-              {file ? "Gotowe do przetworzenia" : "UTF-8 recommended"}
+              {file ? "Ready to process" : "UTF-8 recommended"}
             </span>
           </span>
         </label>
 
         {file && !disabled && (
-          <button type="button" onClick={onClear} className={secondaryButtonClass} title="Wyczysc">
-            Usun
+          <button type="button" onClick={onClear} className={secondaryButtonClass} title="Clear">
+            Remove
           </button>
         )}
       </div>
@@ -766,7 +766,17 @@ export default function Home() {
             </Link>
 
             <div className="min-w-0 text-left">
-              <div className="text-sm font-semibold tracking-[0.22em] text-blue-400/80">{SITE_NAME}</div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm font-semibold tracking-[0.22em] text-blue-400/80">{SITE_NAME}</div>
+                <nav className="flex items-center gap-4 text-sm text-zinc-400" aria-label="Primary navigation">
+                  <Link href="/contact" className="transition hover:text-blue-400">
+                    Contact
+                  </Link>
+                  <Link href="/privacy" className="transition hover:text-blue-400">
+                    Privacy
+                  </Link>
+                </nav>
+              </div>
               <h1 className="mt-2 text-3xl font-semibold tracking-normal text-zinc-50 md:text-4xl">
                 Dual subtitles, without the heavy editor.
               </h1>
@@ -1167,6 +1177,9 @@ export default function Home() {
             <span>DualSubs</span>
           </Link>
           <div className="flex flex-wrap gap-4">
+            <Link href="/contact" className="transition hover:text-blue-400">
+              Contact
+            </Link>
             <Link href="/privacy" className="transition hover:text-blue-400">
               Privacy Policy
             </Link>

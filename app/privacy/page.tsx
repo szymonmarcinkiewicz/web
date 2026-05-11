@@ -111,9 +111,14 @@ export default function PrivacyPage() {
         </section>
 
         <footer className="mt-10 border-t border-white/10 pt-6 text-sm text-zinc-500">
-          <Link href="/" className="transition hover:text-blue-400">
-            Back to DualSubs
-          </Link>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/" className="transition hover:text-blue-400">
+              Back to DualSubs
+            </Link>
+            <Link href="/contact" className="transition hover:text-blue-400">
+              Contact
+            </Link>
+          </div>
         </footer>
       </div>
     </main>
